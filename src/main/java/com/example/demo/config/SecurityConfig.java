@@ -1,5 +1,7 @@
 package com.example.demo.config;
 
+import com.example.demo.service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,6 +15,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
     
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -42,7 +47,8 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/")
                 .permitAll()
-            );
+            )
+            .userDetailsService(userDetailsService);
         
         return http.build();
     }
