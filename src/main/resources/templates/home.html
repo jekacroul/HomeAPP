@@ -72,7 +72,7 @@
                     </div>
                     <p class="address">📍 <span th:text="${place.address}">Адрес</span></p>
                     <div class="amenities">
-                        <span class="amenity" th:if="${place.wifi}" title="Wi-Fi: " + ${place.wifiSpeed} + " Mbps">📶 Wi-Fi</span>
+                        <span class="amenity" th:if="${place.wifi}" th:title="'Wi-Fi: ' + ${place.wifiSpeed} + ' Mbps'">📶 Wi-Fi</span>
                         <span class="amenity" th:if="${place.sockets.name() == 'MANY'}">🔌 Много розеток</span>
                         <span class="amenity" th:if="${place.sockets.name() == 'FEW'}">🔌 Мало розеток</span>
                         <span class="amenity" th:if="${place.noiseLevel.name() == 'QUIET'}">🤫 Тихо</span>
