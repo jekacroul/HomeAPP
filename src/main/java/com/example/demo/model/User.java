@@ -16,6 +16,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
     
+    @Column(name = "password_hash", nullable = false, length = 72)
     private String password;
     
     private String name;
@@ -29,6 +30,18 @@ public class User {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        validatePasswordHash();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        validatePasswordHash();
+    }
+
+    private void validatePasswordHash() {
+        if (password == null || !password.matches("^\\$2[aby]\\$.{56}$")) {
+            throw new IllegalStateException("Password must be stored as a BCrypt hash");
+        }
     }
     
     // Getters and Setters
