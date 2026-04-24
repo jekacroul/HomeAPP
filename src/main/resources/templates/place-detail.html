@@ -12,7 +12,9 @@
         <div class="container nav-content">
             <a href="/" class="logo">📍 Где работать</a>
             <div class="nav-links">
-                <a sec:authorize="isAuthenticated()" href="/logout" class="btn btn-outline">Выйти</a>
+                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="logout-form">
+                    <button type="submit" class="btn btn-outline">Выйти</button>
+                </form>
                 <a sec:authorize="!isAuthenticated()" href="/login" class="btn btn-outline">Войти</a>
             </div>
         </div>
