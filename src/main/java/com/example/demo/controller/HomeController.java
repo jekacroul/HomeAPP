@@ -64,6 +64,7 @@ public class HomeController {
 
         List<Review> reviews = reviewRepository.findByPlaceId(id);
         model.addAttribute("reviews", reviews);
+        model.addAttribute("mapTileUrl", mapTileUrl);
 
         if (authentication != null && authentication.isAuthenticated()) {
             String email = authentication.getName();

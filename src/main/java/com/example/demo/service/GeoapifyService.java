@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -13,18 +12,16 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class GeoapifyService {
 
-    private static final String MINSK_RECT = "27.340,53.745,27.800,54.050";
-    private static final String MINSK_BIAS = "proximity:27.5615,53.9023";
-
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${geoapify.api-key}")
-    private String apiKey;
+    @Value("${geoapify.places-url}")
+    private String placesUrl;
 
     public GeoapifyService() {
         this.httpClient = HttpClient.newBuilder()
@@ -33,55 +30,59 @@ public class GeoapifyService {
     }
 
     public List<GeoPlaceSuggestion> searchInMinsk(String query, int limit) {
-        if (query == null || query.isBlank()) {
-            return List.of();
-        }
-
         try {
-            URI uri = UriComponentsBuilder
-                .fromUriString("https://api.geoapify.com/v1/geocode/autocomplete")
-                .queryParam("text", query + " Минск")
-                .queryParam("filter", "rect:" + MINSK_RECT)
-                .queryParam("bias", MINSK_BIAS)
-                .queryParam("format", "json")
-                .queryParam("limit", limit)
-                .queryParam("apiKey", apiKey)
-                .build(true)
-                .toUri();
-
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(uri)
+                .uri(URI.create(placesUrl))
                 .timeout(Duration.ofSeconds(15))
                 .GET()
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 return List.of();
             }
 
             JsonNode root = objectMapper.readTree(response.body());
-            JsonNode results = root.path("results");
-            if (!results.isArray()) {
+            JsonNode features = root.path("features");
+            if (!features.isArray()) {
                 return List.of();
             }
 
+            String queryLower = query == null ? "" : query.toLowerCase(Locale.ROOT).trim();
             List<GeoPlaceSuggestion> suggestions = new ArrayList<>();
-            for (JsonNode item : results) {
-                double lat = item.path("lat").asDouble(Double.NaN);
-                double lon = item.path("lon").asDouble(Double.NaN);
+
+            for (JsonNode feature : features) {
+                JsonNode properties = feature.path("properties");
+                JsonNode coordinates = feature.path("geometry").path("coordinates");
+                if (!coordinates.isArray() || coordinates.size() < 2) {
+                    continue;
+                }
+
+                double lon = coordinates.get(0).asDouble(Double.NaN);
+                double lat = coordinates.get(1).asDouble(Double.NaN);
                 if (Double.isNaN(lat) || Double.isNaN(lon)) {
                     continue;
                 }
 
-                String formatted = item.path("formatted").asText("Неизвестный адрес");
-                String name = item.path("name").asText("");
+                String name = properties.path("name").asText("").trim();
+                String address = properties.path("formatted").asText("").trim();
+
                 if (name.isBlank()) {
-                    name = formatted;
+                    name = properties.path("address_line1").asText("Без названия");
+                }
+                if (address.isBlank()) {
+                    address = properties.path("address_line2").asText("Без адреса");
                 }
 
-                suggestions.add(new GeoPlaceSuggestion(name, formatted, lat, lon));
+                String searchable = (name + " " + address).toLowerCase(Locale.ROOT);
+                if (!queryLower.isBlank() && !searchable.contains(queryLower)) {
+                    continue;
+                }
+
+                suggestions.add(new GeoPlaceSuggestion(name, address, lat, lon));
+                if (suggestions.size() >= limit) {
+                    break;
+                }
             }
 
             return suggestions;

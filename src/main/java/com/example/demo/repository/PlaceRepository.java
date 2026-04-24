@@ -12,4 +12,6 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
     List<Place> findByNoiseLevel(Place.NoiseLevel noiseLevel);
     List<Place> findBySockets(Place.SocketAvailability sockets);
     List<Place> findByStayDurationAllowedTrue();
+
+    void deleteByNameIn(List<String> names);
 }
