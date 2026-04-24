@@ -28,10 +28,21 @@ public class CustomUserDetailsService implements UserDetailsService {
         
         User user = userOpt.get();
         
+        // Создаем кастомный UserDetails с именем пользователя
         return new org.springframework.security.core.userdetails.User(
             user.getEmail(),
             user.getPassword(),
             Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
-        );
+        ) {
+            @Override
+            public String toString() {
+                // Возвращаем имя для отображения в шаблонах
+                return user.getName() != null ? user.getName() : user.getEmail();
+            }
+            
+            public String getDisplayName() {
+                return user.getName() != null ? user.getName() : user.getEmail();
+            }
+        };
     }
 }

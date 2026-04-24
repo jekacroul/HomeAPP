@@ -46,6 +46,7 @@ public class AuthController {
         newUser.setName(user.getName());
         
         userRepository.save(newUser);
-        return "redirect:/login";
+        // Автоматический вход после регистрации
+        return "redirect:/login?registered=true";
     }
 }
