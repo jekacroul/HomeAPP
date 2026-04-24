@@ -18,9 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 public class AuthController {
     
     @Autowired
-    private AuthenticationManager authenticationManager;
-    
-    @Autowired
     private UserRepository userRepository;
     
     @Autowired
@@ -29,20 +26,6 @@ public class AuthController {
     @GetMapping("/login")
     public String loginPage() {
         return "login";
-    }
-    
-    @PostMapping("/login")
-    public String login(@ModelAttribute("user") User user, Model model) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword())
-            );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            return "redirect:/";
-        } catch (Exception e) {
-            model.addAttribute("error", "Неверный email или пароль");
-            return "login";
-        }
     }
     
     @GetMapping("/register")
@@ -64,11 +47,5 @@ public class AuthController {
         
         userRepository.save(newUser);
         return "redirect:/login";
-    }
-    
-    @GetMapping("/logout")
-    public String logout() {
-        SecurityContextHolder.clearContext();
-        return "redirect:/";
     }
 }
