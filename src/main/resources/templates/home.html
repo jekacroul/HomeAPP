@@ -14,7 +14,7 @@
             <div class="nav-links">
                 <a href="/add-place" class="btn btn-primary">+ Добавить место</a>
                 <span sec:authorize="isAuthenticated()" class="user-info">
-                    Привет, <span sec:authentication="name"></span>
+                    Привет, <span sec:authentication="principal.displayName"></span>
                 </span>
                 <a sec:authorize="isAuthenticated()" href="/logout" class="btn btn-outline">Выйти</a>
                 <a sec:authorize="!isAuthenticated()" href="/login" class="btn btn-outline">Войти</a>
