@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить место - Где работать</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="/" class="logo">📍 Где работать</a>
+            <div class="nav-links">
+                <a href="/" class="btn btn-outline">Назад</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container page-content">
+        <div class="form-container">
+            <h1>Добавить новое место</h1>
+            <form th:action="@{/add-place}" method="post" th:object="${place}">
+                <div class="form-group">
+                    <label for="name">Название *</label>
+                    <input type="text" id="name" name="name" required placeholder="Например: Coffee & Work">
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Адрес *</label>
+                    <input type="text" id="address" name="address" required placeholder="ул. Ленина, 10">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="latitude">Широта</label>
+                        <input type="number" step="0.0001" id="latitude" name="latitude" placeholder="55.7558">
+                    </div>
+                    <div class="form-group">
+                        <label for="longitude">Долгота</label>
+                        <input type="number" step="0.0001" id="longitude" name="longitude" placeholder="37.6173">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="imageUrl">URL изображения</label>
+                    <input type="url" id="imageUrl" name="imageUrl" placeholder="https://...">
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="wifi" name="wifi">
+                        <span>Есть Wi-Fi</span>
+                    </label>
+                </div>
+                
+                <div class="form-group" id="wifi-speed-group" style="display:none;">
+                    <label for="wifiSpeed">Скорость Wi-Fi (Mbps)</label>
+                    <input type="number" id="wifiSpeed" name="wifiSpeed" placeholder="50">
+                </div>
+                
+                <div class="form-group">
+                    <label for="noiseLevel">Уровень шума</label>
+                    <select id="noiseLevel" name="noiseLevel">
+                        <option value="QUIET">Тихо</option>
+                        <option value="MEDIUM" selected>Средне</option>
+                        <option value="NOISY">Шумно</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sockets">Розетки</label>
+                    <select id="sockets" name="sockets">
+                        <option value="MANY">Много</option>
+                        <option value="FEW" selected>Мало</option>
+                        <option value="NONE">Нет</option>
+                    </select>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="stayDurationAllowed" name="stayDurationAllowed">
+                        <span>Можно сидеть долго</span>
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-large">Добавить место</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('wifi').addEventListener('change', function() {
+            document.getElementById('wifi-speed-group').style.display = this.checked ? 'block' : 'none';
+        });
+    </script>
+</body>
+</html>

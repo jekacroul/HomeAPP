@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Где работать - Найди идеальное место</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="/" class="logo">📍 Где работать</a>
+            <div class="nav-links">
+                <a href="/add-place" class="btn btn-primary">+ Добавить место</a>
+                <span sec:authorize="isAuthenticated()" class="user-info">
+                    Привет, <span sec:authentication="name"></span>
+                </span>
+                <a sec:authorize="isAuthenticated()" href="/logout" class="btn btn-outline">Выйти</a>
+                <a sec:authorize="!isAuthenticated()" href="/login" class="btn btn-outline">Войти</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>Найди идеальное место для работы</h1>
+            <p>Кафе, коворкинги и другие пространства с Wi-Fi, розетками и комфортной атмосферой</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="filters">
+            <div class="filter-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="filter-wifi" checked>
+                    <span>Wi-Fi</span>
+                </label>
+            </div>
+            <div class="filter-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="filter-sockets" checked>
+                    <span>Розетки</span>
+                </label>
+            </div>
+            <div class="filter-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="filter-quiet">
+                    <span>Тихо</span>
+                </label>
+            </div>
+            <div class="filter-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="filter-longstay">
+                    <span>Можно надолго</span>
+                </label>
+            </div>
+        </section>
+
+        <section class="places-grid">
+            <div class="place-card" th:each="place : ${places}" 
+                 th:classappend="${place.noiseLevel.name() == 'QUIET'} ? 'quiet' : (${place.noiseLevel.name() == 'NOISY'} ? 'noisy' : '')">
+                <div class="place-image" th:style="'background-image: url(' + ${place.imageUrl} + ')'"></div>
+                <div class="place-content">
+                    <div class="place-header">
+                        <h3 th:text="${place.name}">Название места</h3>
+                        <div class="rating" th:if="${place.rating > 0}">
+                            ⭐ <span th:text="${#numbers.formatDecimal(place.rating, 1, 1)}">4.5</span>
+                        </div>
+                    </div>
+                    <p class="address">📍 <span th:text="${place.address}">Адрес</span></p>
+                    <div class="amenities">
+                        <span class="amenity" th:if="${place.wifi}" title="Wi-Fi: " + ${place.wifiSpeed} + " Mbps">📶 Wi-Fi</span>
+                        <span class="amenity" th:if="${place.sockets.name() == 'MANY'}">🔌 Много розеток</span>
+                        <span class="amenity" th:if="${place.sockets.name() == 'FEW'}">🔌 Мало розеток</span>
+                        <span class="amenity" th:if="${place.noiseLevel.name() == 'QUIET'}">🤫 Тихо</span>
+                        <span class="amenity" th:if="${place.noiseLevel.name() == 'MEDIUM'}">😐 Средне</span>
+                        <span class="amenity" th:if="${place.noiseLevel.name() == 'NOISY'}">🔊 Шумно</span>
+                        <span class="amenity" th:if="${place.stayDurationAllowed}">⏰ Можно надолго</span>
+                    </div>
+                    <a th:href="@{/place/{id}(id=${place.id})}" class="btn btn-secondary">Подробнее</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2024 Где работать. Приложение для удалёнщиков.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.filter-group input').forEach(input => {
+            input.addEventListener('change', filterPlaces);
+        });
+
+        function filterPlaces() {
+            const wifi = document.getElementById('filter-wifi').checked;
+            const sockets = document.getElementById('filter-sockets').checked;
+            const quiet = document.getElementById('filter-quiet').checked;
+            const longstay = document.getElementById('filter-longstay').checked;
+
+            document.querySelectorAll('.place-card').forEach(card => {
+                let show = true;
+                
+                if (wifi && !card.querySelector('[title*="Wi-Fi"]')) show = false;
+                if (sockets && !card.textContent.includes('розеток')) show = false;
+                if (quiet && !card.classList.contains('quiet')) show = false;
+                if (longstay && !card.textContent.includes('Можно надолго')) show = false;
+                
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

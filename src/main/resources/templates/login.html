@@ -1,78 +1,40 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход в систему</title>
+    <title>Вход - Где работать</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
-    <div class="background">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <a href="/" class="logo">📍 Где работать</a>
+            <h1>Вход</h1>
+            
+            <div th:if="${param.error}" class="alert alert-error">
+                Неверный email или пароль
+            </div>
+            
+            <form th:action="@{/login}" method="post">
+                <div class="form-group">
+                    <label for="username">Email</label>
+                    <input type="email" id="username" name="username" required placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" required placeholder="••••••••">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-large">Войти</button>
+            </form>
+            
+            <p class="auth-footer">
+                Нет аккаунта? <a th:href="@{/register}">Зарегистрироваться</a>
+            </p>
+        </div>
     </div>
-
-    <div class="login-container">
-        <form class="login-form" th:action="@{/login}" method="post">
-            <h2>Добро пожаловать</h2>
-            <p class="subtitle">Войдите в свой аккаунт</p>
-
-            <div class="input-group">
-                <label for="username">Логин</label>
-                <input type="text" id="username" name="username" placeholder="Введите логин" required autocomplete="off">
-                <span class="focus-border"></span>
-            </div>
-
-            <div class="input-group">
-                <label for="password">Пароль</label>
-                <input type="password" id="password" name="password" placeholder="Введите пароль" required>
-                <span class="focus-border"></span>
-            </div>
-
-            <button type="submit" class="login-btn">
-                <span>Войти</span>
-                <div class="btn-bg"></div>
-            </button>
-
-            <div class="extra-links">
-                <a href="#" class="forgot-password">Забыли пароль?</a>
-                <a href="#" class="register-link">Нет аккаунта? Зарегистрироваться</a>
-            </div>
-
-            <div th:if="${param.error}" class="error-message">
-                Неверный логин или пароль
-            </div>
-        </form>
-    </div>
-
-    <script>
-        // Анимация при наведении на input
-        const inputs = document.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.addEventListener('focus', () => {
-                input.parentElement.classList.add('focused');
-            });
-            input.addEventListener('blur', () => {
-                if (input.value === '') {
-                    input.parentElement.classList.remove('focused');
-                }
-            });
-        });
-
-        // Анимация кнопки
-        const btn = document.querySelector('.login-btn');
-        btn.addEventListener('mouseenter', (e) => {
-            const rect = btn.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const bg = btn.querySelector('.btn-bg');
-            bg.style.left = x + 'px';
-            bg.style.top = y + 'px';
-        });
-    </script>
 </body>
 </html>
