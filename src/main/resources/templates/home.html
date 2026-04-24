@@ -16,7 +16,9 @@
                 <span sec:authorize="isAuthenticated()" class="user-info">
                     Привет, <span sec:authentication="principal.displayName"></span>
                 </span>
-                <a sec:authorize="isAuthenticated()" href="/logout" class="btn btn-outline">Выйти</a>
+                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="logout-form">
+                    <button type="submit" class="btn btn-outline">Выйти</button>
+                </form>
                 <a sec:authorize="!isAuthenticated()" href="/login" class="btn btn-outline">Войти</a>
             </div>
         </div>
