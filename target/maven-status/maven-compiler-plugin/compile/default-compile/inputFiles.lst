@@ -1,0 +1,15 @@
+/workspace/src/main/java/com/example/demo/DataLoader.java
+/workspace/src/main/java/com/example/demo/HomeApplication.java
+/workspace/src/main/java/com/example/demo/config/SecurityConfig.java
+/workspace/src/main/java/com/example/demo/config/WebConfig.java
+/workspace/src/main/java/com/example/demo/controller/AdminController.java
+/workspace/src/main/java/com/example/demo/controller/AuthController.java
+/workspace/src/main/java/com/example/demo/controller/HomeController.java
+/workspace/src/main/java/com/example/demo/model/Place.java
+/workspace/src/main/java/com/example/demo/model/Review.java
+/workspace/src/main/java/com/example/demo/model/User.java
+/workspace/src/main/java/com/example/demo/repository/PlaceRepository.java
+/workspace/src/main/java/com/example/demo/repository/ReviewRepository.java
+/workspace/src/main/java/com/example/demo/repository/UserRepository.java
+/workspace/src/main/java/com/example/demo/service/CustomUserDetailsService.java
+/workspace/src/main/java/com/example/demo/service/YandexSearchService.java

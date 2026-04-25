@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${place.name} + ' - Где работать'">Место</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar">
+    <div class="container nav-content">
+        <a href="/" class="logo">📍 Где работать</a>
+        <div class="nav-links">
+            <a sec:authorize="hasRole('ADMIN')" href="/admin" class="btn btn-secondary">Админ-панель</a>
+            <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit" class="btn btn-outline">Выйти</button>
+            </form>
+            <a sec:authorize="!isAuthenticated()" href="/login" class="btn btn-outline">Войти</a>
+        </div>
+    </div>
+</nav>
+
+<main class="container page-content">
+    <a href="/" class="back-link">← Назад к списку</a>
+
+    <div class="place-detail">
+        <div class="place-detail-image" th:style="'background-image: url(' + ${place.imageUrl} + ')'"></div>
+
+        <div class="place-detail-content">
+            <h1 th:text="${place.name}">Название места</h1>
+
+            <div class="rating-large" th:if="${place.rating > 0}">
+                ⭐ <span th:text="${#numbers.formatDecimal(place.rating, 1, 1)}">4.5</span> из 5
+            </div>
+
+            <p class="address-large">📍 <span th:text="${place.address}">Адрес</span></p>
+
+            <form sec:authorize="hasRole('ADMIN')" th:action="@{/place/{id}/delete(id=${place.id})}" method="post" style="margin-bottom: 20px;">
+                <button type="submit" class="btn btn-outline">Удалить место</button>
+            </form>
+
+            <div class="amenities-grid">
+                <div class="amenity-card" th:if="${place.wifi}">
+                    <span class="amenity-icon">📶</span>
+                    <span>Wi-Fi</span>
+                    <small th:text="${place.wifiSpeed} + ' Mbps'">50 Mbps</small>
+                </div>
+                <div class="amenity-card">
+                    <span class="amenity-icon">🔌</span>
+                    <span>Розетки</span>
+                    <small th:text="${place.sockets.name() == 'MANY'} ? 'Много' : (${place.sockets.name() == 'FEW'} ? 'Мало' : 'Нет')">Много</small>
+                </div>
+                <div class="amenity-card">
+                    <span class="amenity-icon">🔊</span>
+                    <span>Шум</span>
+                    <small th:text="${place.noiseLevel.name() == 'QUIET'} ? 'Тихо' : (${place.noiseLevel.name() == 'MEDIUM'} ? 'Средне' : 'Шумно')">Тихо</small>
+                </div>
+                <div class="amenity-card">
+                    <span class="amenity-icon">⏰</span>
+                    <span>Можно надолго</span>
+                    <small th:text="${place.stayDurationAllowed} ? 'Да' : 'Нет'">Да</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="reviews-section">
+        <h2>Расположение</h2>
+        <div th:if="${place.latitude != null and place.longitude != null}" id="detail-map" class="detail-map"></div>
+        <p th:if="${place.latitude == null or place.longitude == null}" class="no-reviews">Координаты для этого места пока не заданы.</p>
+
+        <h2>Отзывы</h2>
+
+        <div class="reviews-list">
+            <div class="review-card" th:each="review : ${reviews}">
+                <div class="review-header">
+                    <span class="review-rating">⭐ <span th:text="${review.rating}">5</span></span>
+                    <span class="review-date" th:text="${#temporals.format(review.createdAt, 'dd.MM.yyyy')}">01.01.2024</span>
+                </div>
+                <p class="review-author">
+                    👤 <strong th:text="${review.user.name != null and !review.user.name.isBlank() ? review.user.name : review.user.email}">Имя</strong>
+                    <span th:text="'(' + ${review.user.email} + ')'">(email)</span>
+                </p>
+                <p class="review-comment" th:text="${review.comment}">Отличный отзыв</p>
+                <img th:if="${review.imageUrl != null and !review.imageUrl.isBlank()}"
+                     th:src="${review.imageUrl}"
+                     alt="Фото к отзыву"
+                     class="review-image review-image-clickable"
+                     loading="lazy"
+                     role="button"
+                     tabindex="0"/>
+
+                <div class="review-actions" th:if="${currentUser != null and (review.user.id == currentUser.id or isAdmin)}">
+                    <details class="review-edit-box">
+                        <summary>Редактировать</summary>
+                        <form th:action="@{/review/{id}/edit(id=${review.id})}" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label>Оценка</label>
+                                <select name="rating" required>
+                                    <option value="5" th:selected="${review.rating == 5}">⭐⭐⭐⭐⭐ (5)</option>
+                                    <option value="4" th:selected="${review.rating == 4}">⭐⭐⭐⭐ (4)</option>
+                                    <option value="3" th:selected="${review.rating == 3}">⭐⭐⭐ (3)</option>
+                                    <option value="2" th:selected="${review.rating == 2}">⭐⭐ (2)</option>
+                                    <option value="1" th:selected="${review.rating == 1}">⭐ (1)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Комментарий</label>
+                                <textarea name="comment" rows="3" required th:text="${review.comment}"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Новое фото (необязательно)</label>
+                                <input type="file" name="imageFile" accept="image/*">
+                            </div>
+                            <label class="checkbox-label" th:if="${review.imageUrl != null and !review.imageUrl.isBlank()}">
+                                <input type="checkbox" name="removeImage" value="true">
+                                <span>Удалить текущее фото</span>
+                            </label>
+                            <button type="submit" class="btn btn-primary btn-save-review">💾 Сохранить изменения</button>
+                        </form>
+                    </details>
+
+                    <form th:action="@{/review/{id}/delete(id=${review.id})}" method="post">
+                        <button type="submit" class="btn btn-outline">Удалить комментарий</button>
+                    </form>
+                </div>
+            </div>
+            <p th:if="${#lists.isEmpty(reviews)}" class="no-reviews">Пока нет отзывов. Будьте первым!</p>
+        </div>
+
+        <div sec:authorize="isAuthenticated()" class="add-review-form">
+            <h3>Оставить отзыв</h3>
+            <form th:action="@{/place/{id}/review(id=${place.id})}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="rating">Оценка</label>
+                    <select id="rating" name="rating" required>
+                        <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                        <option value="4">⭐⭐⭐⭐ (4)</option>
+                        <option value="3">⭐⭐⭐ (3)</option>
+                        <option value="2">⭐⭐ (2)</option>
+                        <option value="1">⭐ (1)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Комментарий</label>
+                    <textarea id="comment" name="comment" rows="4" placeholder="Расскажите о вашем опыте..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="imageFile">Фото к комментарию (необязательно)</label>
+                    <input id="imageFile" type="file" name="imageFile" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+            </form>
+        </div>
+
+        <div sec:authorize="!isAuthenticated()" class="login-prompt">
+            <p><a th:href="@{/login}">Войдите</a>, чтобы оставить отзыв</p>
+        </div>
+    </section>
+</main>
+
+<div id="review-image-modal" class="image-modal" hidden>
+    <button id="review-image-modal-close" type="button" class="image-modal-close" aria-label="Закрыть просмотр фото">✕</button>
+    <img id="review-image-modal-img" src="" alt="Фото из отзыва в полном размере" class="image-modal-content">
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 Где работать. Приложение для удалёнщиков.</p>
+    </div>
+</footer>
+
+<script th:src="${mapApiUrl}" type="text/javascript"></script>
+<script th:inline="javascript">
+    const lat = /*[[${place.latitude}]]*/ null;
+    const lon = /*[[${place.longitude}]]*/ null;
+
+    if (lat !== null && lon !== null) {
+        ymaps.ready(() => {
+            const map = new ymaps.Map('detail-map', {
+                center: [lat, lon],
+                zoom: 15,
+                controls: ['zoomControl', 'fullscreenControl']
+            });
+
+            const marker = new ymaps.Placemark([lat, lon], {}, {preset: 'islands#redDotIcon'});
+            map.geoObjects.add(marker);
+        });
+    }
+</script>
+<script>
+    const reviewImageModal = document.getElementById('review-image-modal');
+    const reviewImageModalImg = document.getElementById('review-image-modal-img');
+    const reviewImageModalClose = document.getElementById('review-image-modal-close');
+    const reviewImages = document.querySelectorAll('.review-image-clickable');
+
+    function openReviewImageModal(src, alt) {
+        reviewImageModalImg.src = src;
+        reviewImageModalImg.alt = alt || 'Фото из отзыва в полном размере';
+        reviewImageModal.hidden = false;
+        document.body.classList.add('no-scroll');
+    }
+
+    function closeReviewImageModal() {
+        reviewImageModal.hidden = true;
+        reviewImageModalImg.src = '';
+        document.body.classList.remove('no-scroll');
+    }
+
+    reviewImages.forEach((img) => {
+        img.addEventListener('click', () => openReviewImageModal(img.src, img.alt));
+        img.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openReviewImageModal(img.src, img.alt);
+            }
+        });
+    });
+
+    reviewImageModalClose.addEventListener('click', closeReviewImageModal);
+    reviewImageModal.addEventListener('click', (event) => {
+        if (event.target === reviewImageModal) {
+            closeReviewImageModal();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !reviewImageModal.hidden) {
+            closeReviewImageModal();
+        }
+    });
+</script>
+</body>
+</html>
