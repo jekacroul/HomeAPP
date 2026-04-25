@@ -152,49 +152,13 @@
             const west = Math.min(first[1], second[1]);
             const east = Math.max(first[1], second[1]);
 
-            const southWest = [south, west];
-            const northEast = [north, east];
-
-            const geocodeOptions = {
-                boundedBy: [southWest, northEast],
-                strictBounds: false,
-                results: 20,
-                kind: 'biz'
-            };
-
-            const collectPlaces = (result) => {
-                const collected = [];
-                result.geoObjects.each((geoObject) => {
-                    const coords = geoObject.geometry.getCoordinates();
-                    if (!coords || coords.length < 2) {
-                        return;
-                    }
-
-                    const name = geoObject.properties.get('name') || 'Без названия';
-                    const address = geoObject.getAddressLine() || geoObject.properties.get('text') || 'Без адреса';
-
-                    collected.push({
-                        name,
-                        address,
-                        latitude: coords[0],
-                        longitude: coords[1]
-                    });
-                });
-                return collected;
-            };
-
-            let geocodeResult = await ymaps.geocode(query + ', Минск', geocodeOptions);
-            let places = collectPlaces(geocodeResult);
-
-            if (!places.length) {
-                geocodeResult = await ymaps.geocode(query + ', Минск', {
-                    boundedBy: [southWest, northEast],
-                    strictBounds: false,
-                    results: 20
-                });
-                places = collectPlaces(geocodeResult);
+            const bbox = west + ',' + north + ',' + east + ',' + south;
+            const response = await fetch('/api/minsk-places?query=' + encodeURIComponent(query) + '&bbox=' + encodeURIComponent(bbox));
+            if (!response.ok) {
+                throw new Error('API request failed');
             }
 
+            const places = await response.json();
             clearSearchMarkers();
 
             if (!places.length) {

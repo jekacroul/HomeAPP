@@ -6,6 +6,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.PlaceRepository;
 import com.example.demo.repository.ReviewRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.YandexPlacesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -35,6 +36,9 @@ public class HomeController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private YandexPlacesService yandexPlacesService;
 
     @Value("${yandex.maps.js-api-url}")
     private String mapApiUrl;
@@ -161,6 +165,15 @@ public class HomeController {
         model.addAttribute("place", new Place());
         model.addAttribute("mapApiUrl", mapApiUrl);
         return "add-place";
+    }
+
+    @GetMapping(value = "/api/minsk-places", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public List<YandexPlacesService.MapPlaceSuggestion> searchMinskPlaces(
+        @RequestParam(value = "query", required = false) String query,
+        @RequestParam(value = "bbox", required = false) String bbox
+    ) {
+        return yandexPlacesService.searchPlaces(query, bbox);
     }
 
     @PostMapping(value = "/add-place", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
