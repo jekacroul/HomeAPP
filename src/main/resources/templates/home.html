@@ -7,12 +7,13 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="home-page">
     <nav class="navbar">
         <div class="container nav-content">
             <a href="/" class="logo">📍 Где работать</a>
             <div class="nav-links">
-                <a href="/add-place" class="btn btn-primary">+ Добавить место</a>
+                <a sec:authorize="hasRole('ADMIN')" href="/admin" class="btn btn-secondary">Админ-панель</a>
+                <a sec:authorize="isAuthenticated()" href="/add-place" class="btn btn-primary">+ Добавить место</a>
                 <span sec:authorize="isAuthenticated()" class="user-info">
                     Привет, <span sec:authentication="principal.displayName"></span>
                 </span>
@@ -31,7 +32,7 @@
         </div>
     </header>
 
-    <main class="container">
+    <main class="container home-main">
         <section class="filters">
             <div class="filter-group">
                 <label class="checkbox-label">
@@ -72,7 +73,7 @@
                     </div>
                     <p class="address">📍 <span th:text="${place.address}">Адрес</span></p>
                     <div class="amenities">
-                        <span class="amenity" th:if="${place.wifi}" title="Wi-Fi: " + ${place.wifiSpeed} + " Mbps">📶 Wi-Fi</span>
+                        <span class="amenity" th:if="${place.wifi}" th:title="'Wi-Fi: ' + ${place.wifiSpeed} + ' Mbps'">📶 Wi-Fi</span>
                         <span class="amenity" th:if="${place.sockets.name() == 'MANY'}">🔌 Много розеток</span>
                         <span class="amenity" th:if="${place.sockets.name() == 'FEW'}">🔌 Мало розеток</span>
                         <span class="amenity" th:if="${place.noiseLevel.name() == 'QUIET'}">🤫 Тихо</span>
@@ -86,9 +87,9 @@
         </section>
     </main>
 
-    <footer class="footer">
+    <footer class="footer footer-fixed">
         <div class="container">
-            <p>© 2024 Где работать. Приложение для удалёнщиков.</p>
+            <p>© 2026 Где работать. Приложение для удалёнщиков.</p>
         </div>
     </footer>
 

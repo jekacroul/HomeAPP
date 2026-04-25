@@ -16,19 +16,43 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
     
+    @Column(name = "password_hash", nullable = false, length = 72)
     private String password;
     
     private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
+
+    @Column(nullable = false)
+    private Boolean banned = false;
     
     @Column(updatable = false)
     private LocalDateTime createdAt;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
+
+    public enum Role {
+        USER, ADMIN
+    }
     
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        validatePasswordHash();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        validatePasswordHash();
+    }
+
+    private void validatePasswordHash() {
+        if (password == null || !password.matches("^\\$2[aby]\\$.{56}$")) {
+            throw new IllegalStateException("Password must be stored as a BCrypt hash");
+        }
     }
     
     // Getters and Setters
@@ -43,6 +67,12 @@ public class User {
     
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
+
+    public Boolean getBanned() { return banned; }
+    public void setBanned(Boolean banned) { this.banned = banned; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     
