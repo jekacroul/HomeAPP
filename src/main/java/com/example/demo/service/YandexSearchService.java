@@ -13,7 +13,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 public class YandexSearchService {
@@ -61,7 +60,7 @@ public class YandexSearchService {
 
         URI uriBuilder = UriComponentsBuilder.fromUriString(searchApiUrl)
             .queryParam("apikey", apiKey)
-            .queryParam("text", query)
+            .queryParam("text", query + " Минск")
             .queryParam("lang", "ru_RU")
             .queryParam("bbox", bounds.west + "," + bounds.south + "~" + bounds.east + "," + bounds.north)
             .queryParam("rspn", "1")
@@ -86,7 +85,6 @@ public class YandexSearchService {
             return List.of();
         }
 
-        String queryLower = query.toLowerCase(Locale.ROOT);
         List<SearchPlaceDto> result = new ArrayList<>();
 
         for (JsonNode feature : features) {
@@ -106,11 +104,6 @@ public class YandexSearchService {
 
             String name = meta.path("name").asText(properties.path("name").asText("Без названия")).trim();
             String address = meta.path("address").asText(properties.path("description").asText("Без адреса")).trim();
-
-            String searchable = (name + " " + address).toLowerCase(Locale.ROOT);
-            if (!searchable.contains(queryLower)) {
-                continue;
-            }
 
             result.add(new SearchPlaceDto(name, address, lat, lon));
         }
