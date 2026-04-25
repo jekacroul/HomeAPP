@@ -12,7 +12,8 @@
         <div class="container nav-content">
             <a href="/" class="logo">📍 Где работать</a>
             <div class="nav-links">
-                <a href="/add-place" class="btn btn-primary">+ Добавить место</a>
+                <a sec:authorize="hasRole('ADMIN')" href="/admin" class="btn btn-secondary">Админ-панель</a>
+                <a sec:authorize="hasRole('ADMIN')" href="/add-place" class="btn btn-primary">+ Добавить место</a>
                 <span sec:authorize="isAuthenticated()" class="user-info">
                     Привет, <span sec:authentication="principal.displayName"></span>
                 </span>

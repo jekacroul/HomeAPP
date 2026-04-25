@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - Где работать</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar">
+    <div class="container nav-content">
+        <a href="/" class="logo">📍 Где работать</a>
+        <div class="nav-links">
+            <a href="/add-place" class="btn btn-primary">+ Добавить место</a>
+            <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit" class="btn btn-outline">Выйти</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<main class="container page-content">
+    <a href="/" class="back-link">← На главную</a>
+
+    <section class="admin-section">
+        <h1>Админ-панель</h1>
+        <p class="admin-subtitle">Управление местами и пользователями.</p>
+    </section>
+
+    <section class="admin-section">
+        <h2>Места</h2>
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Адрес</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="place : ${places}">
+                    <td th:text="${place.id}">1</td>
+                    <td th:text="${place.name}">Название</td>
+                    <td th:text="${place.address}">Адрес</td>
+                    <td>
+                        <form th:action="@{/place/{id}/delete(id=${place.id})}" method="post">
+                            <button type="submit" class="btn btn-outline">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="admin-section">
+        <h2>Пользователи</h2>
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Имя</th>
+                    <th>Роль</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.id}">1</td>
+                    <td th:text="${user.email}">user@email.com</td>
+                    <td th:text="${user.name}">Имя</td>
+                    <td th:text="${user.role}">USER</td>
+                    <td>
+                        <span class="status-badge" th:classappend="${user.banned} ? ' banned' : ' active'"
+                              th:text="${user.banned} ? 'Заблокирован' : 'Активен'">Активен</span>
+                    </td>
+                    <td>
+                        <form th:if="${user.role.name() != 'ADMIN' and !user.banned}" th:action="@{/admin/user/{id}/ban(id=${user.id})}" method="post">
+                            <button type="submit" class="btn btn-outline">Забанить</button>
+                        </form>
+                        <form th:if="${user.role.name() != 'ADMIN' and user.banned}" th:action="@{/admin/user/{id}/unban(id=${user.id})}" method="post">
+                            <button type="submit" class="btn btn-secondary">Разбанить</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

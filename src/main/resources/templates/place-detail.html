@@ -14,6 +14,7 @@
     <div class="container nav-content">
         <a href="/" class="logo">📍 Где работать</a>
         <div class="nav-links">
+            <a sec:authorize="hasRole('ADMIN')" href="/admin" class="btn btn-secondary">Админ-панель</a>
             <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="logout-form">
                 <button type="submit" class="btn btn-outline">Выйти</button>
             </form>
@@ -36,6 +37,10 @@
             </div>
 
             <p class="address-large">📍 <span th:text="${place.address}">Адрес</span></p>
+
+            <form sec:authorize="hasRole('ADMIN')" th:action="@{/place/{id}/delete(id=${place.id})}" method="post" style="margin-bottom: 20px;">
+                <button type="submit" class="btn btn-outline">Удалить место</button>
+            </form>
 
             <div class="amenities-grid">
                 <div class="amenity-card" th:if="${place.wifi}">

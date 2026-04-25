@@ -25,7 +25,8 @@ public class AuthController {
     }
 
     @GetMapping("/register")
-    public String registerPage() {
+    public String registerPage(Model model) {
+        model.addAttribute("user", new User());
         return "register";
     }
 
@@ -45,6 +46,8 @@ public class AuthController {
         newUser.setEmail(user.getEmail());
         newUser.setPassword(passwordEncoder.encode(user.getPassword()));
         newUser.setName(user.getName());
+        newUser.setRole(User.Role.USER);
+        newUser.setBanned(false);
 
         userRepository.save(newUser);
         return "redirect:/login?registered=true";
