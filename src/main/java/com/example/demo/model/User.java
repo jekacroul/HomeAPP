@@ -20,12 +20,23 @@ public class User {
     private String password;
     
     private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
+
+    @Column(nullable = false)
+    private Boolean banned = false;
     
     @Column(updatable = false)
     private LocalDateTime createdAt;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
+
+    public enum Role {
+        USER, ADMIN
+    }
     
     @PrePersist
     protected void onCreate() {
@@ -56,6 +67,12 @@ public class User {
     
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
+
+    public Boolean getBanned() { return banned; }
+    public void setBanned(Boolean banned) { this.banned = banned; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     

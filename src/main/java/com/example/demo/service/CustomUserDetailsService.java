@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -29,10 +30,18 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userOpt.get();
         
         // Создаем кастомный UserDetails с именем пользователя
+        List<SimpleGrantedAuthority> authorities = Collections.singletonList(
+            new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+        );
+
         return new org.springframework.security.core.userdetails.User(
             user.getEmail(),
             user.getPassword(),
-            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+            !Boolean.TRUE.equals(user.getBanned()),
+            true,
+            true,
+            true,
+            authorities
         ) {
             @Override
             public String toString() {

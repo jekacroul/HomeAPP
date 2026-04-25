@@ -11,6 +11,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.authentication.DisabledException;
 
 @Configuration
 @EnableWebSecurity
@@ -33,14 +35,26 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/uploads/**", "/api/minsk-places").permitAll()
+                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/uploads/**", "/api/minsk-places", "/h2-console/**").permitAll()
+                .requestMatchers("/place/*/delete", "/admin/**").hasRole("ADMIN")
+                .requestMatchers("/place/*").permitAll()
                 .anyRequest().authenticated()
             )
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .defaultSuccessUrl("/", true)
-                .failureUrl("/login?error=true")
+                .failureHandler((request, response, exception) -> {
+                    if (exception instanceof DisabledException) {
+                        new SimpleUrlAuthenticationFailureHandler("/login?banned=true")
+                            .onAuthenticationFailure(request, response, exception);
+                        return;
+                    }
+                    new SimpleUrlAuthenticationFailureHandler("/login?error=true")
+                        .onAuthenticationFailure(request, response, exception);
+                })
                 .permitAll()
             )
             .logout(logout -> logout
