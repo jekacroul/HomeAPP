@@ -37,6 +37,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/uploads/**", "/api/minsk-places").permitAll()
                 .requestMatchers("/place/*/delete", "/admin/**").hasRole("ADMIN")
+                .requestMatchers("/place/*").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
