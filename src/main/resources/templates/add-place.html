@@ -152,8 +152,11 @@
             const west = Math.min(first[1], second[1]);
             const east = Math.max(first[1], second[1]);
 
+            const southWest = [south, west];
+            const northEast = [north, east];
+
             const geocodeResult = await ymaps.geocode('Минск ' + query, {
-                boundedBy: [[south, west], [north, east]],
+                boundedBy: [southWest, northEast],
                 strictBounds: true,
                 results: 20
             });
