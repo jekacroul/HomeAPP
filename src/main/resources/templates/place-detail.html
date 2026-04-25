@@ -183,7 +183,7 @@
     if (lat !== null && lon !== null) {
         const map = L.map('detail-map').setView([lat, lon], 15);
         L.tileLayer(tileUrl, {
-            attribution: '&copy; OpenStreetMap contributors &copy; Geoapify'
+            attribution: '&copy; Yandex'
         }).addTo(map);
         L.marker([lat, lon]).addTo(map);
     }
