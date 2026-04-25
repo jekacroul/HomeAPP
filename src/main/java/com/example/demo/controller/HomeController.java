@@ -40,8 +40,8 @@ public class HomeController {
     @Autowired
     private GeoapifyService geoapifyService;
 
-    @Value("${geoapify.map-tile-url}")
-    private String mapTileUrl;
+    @Value("${yandex.maps.js-api-url}")
+    private String mapApiUrl;
 
     @GetMapping("/")
     public String home(Model model, Authentication authentication) {
@@ -61,7 +61,7 @@ public class HomeController {
 
         List<Review> reviews = reviewRepository.findByPlaceIdOrderByCreatedAtDesc(id);
         model.addAttribute("reviews", reviews);
-        model.addAttribute("mapTileUrl", mapTileUrl);
+        model.addAttribute("mapApiUrl", mapApiUrl);
         model.addAttribute("isAdmin", false);
 
         getCurrentUser(authentication).ifPresent(user -> {
@@ -163,17 +163,17 @@ public class HomeController {
     @GetMapping("/add-place")
     public String addPlaceForm(Model model) {
         model.addAttribute("place", new Place());
-        model.addAttribute("mapTileUrl", mapTileUrl);
+        model.addAttribute("mapApiUrl", mapApiUrl);
         return "add-place";
     }
 
     @GetMapping(value = "/api/minsk-places", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public List<GeoapifyService.GeoPlaceSuggestion> searchMinskPlaces(
+    public List<GeoapifyService.GeoPlaceSuggestion> searchPlaces(
         @RequestParam(value = "query", required = false) String query,
         @RequestParam(value = "bbox", required = false) String bbox
     ) {
-        return geoapifyService.searchInMinsk(query, 100, bbox);
+        return geoapifyService.searchInMinsk(query, 50, bbox);
     }
 
     @PostMapping(value = "/add-place", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

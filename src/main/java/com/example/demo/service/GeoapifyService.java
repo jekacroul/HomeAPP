@@ -12,6 +12,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -23,10 +24,10 @@ public class GeoapifyService {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${geoapify.places-url:https://api.geoapify.com/v2/places?categories=catering.cafe,catering.restaurant,catering.fast_food,catering.bar&filter=rect:27.438915081299548,53.890216642813314,27.520990677155474,53.84386961984724&limit=20&apiKey=7aa2f88d19d7416988f9da9e123b5729}")
+    @Value("${geoapify.places-url:https://api.geoapify.com/v2/places?categories=catering.cafe,catering.restaurant,catering.fast_food,catering.bar&filter=rect:27.438915081299548,53.890216642813314,27.520990677155474,53.84386961984724&limit=50&apiKey=7aa2f88d19d7416988f9da9e123b5729}")
     private String placesUrl;
 
-    @Value("${geoapify.search-limit:100}")
+    @Value("${geoapify.search-limit:50}")
     private int searchLimit;
 
     public GeoapifyService() {
@@ -38,7 +39,7 @@ public class GeoapifyService {
     public List<GeoPlaceSuggestion> searchInMinsk(String query, int limit, String bbox) {
         try {
             String rect = isValidRect(bbox) ? bbox : DEFAULT_RECT;
-            int safeLimit = Math.max(20, Math.min(Math.max(limit, searchLimit), 500));
+            int safeLimit = Math.max(20, Math.min(Math.max(limit, searchLimit), 100));
 
             URI uri = UriComponentsBuilder.fromUriString(placesUrl)
                 .replaceQueryParam("filter", "rect:" + rect)
@@ -64,7 +65,8 @@ public class GeoapifyService {
             }
 
             String queryLower = query == null ? "" : query.toLowerCase(Locale.ROOT).trim();
-            List<GeoPlaceSuggestion> suggestions = new ArrayList<>();
+            List<ScoredSuggestion> scored = new ArrayList<>();
+            List<GeoPlaceSuggestion> allSuggestions = new ArrayList<>();
 
             for (JsonNode feature : features) {
                 JsonNode properties = feature.path("properties");
@@ -89,15 +91,43 @@ public class GeoapifyService {
                     address = properties.path("address_line2").asText("Без адреса");
                 }
 
-                String searchable = (name + " " + address).toLowerCase(Locale.ROOT);
-                if (!queryLower.isBlank() && !searchable.contains(queryLower)) {
+                GeoPlaceSuggestion suggestion = new GeoPlaceSuggestion(name, address, lat, lon);
+                allSuggestions.add(suggestion);
+
+                if (queryLower.isBlank()) {
+                    scored.add(new ScoredSuggestion(suggestion, 1));
                     continue;
                 }
 
-                suggestions.add(new GeoPlaceSuggestion(name, address, lat, lon));
+                String searchable = (name + " " + address).toLowerCase(Locale.ROOT);
+                int score = 0;
+                if (name.toLowerCase(Locale.ROOT).contains(queryLower)) {
+                    score += 4;
+                }
+                if (address.toLowerCase(Locale.ROOT).contains(queryLower)) {
+                    score += 2;
+                }
+                for (String token : queryLower.split("\\s+")) {
+                    if (!token.isBlank() && searchable.contains(token)) {
+                        score += 1;
+                    }
+                }
+
+                if (score > 0) {
+                    scored.add(new ScoredSuggestion(suggestion, score));
+                }
             }
 
-            return suggestions;
+            if (!scored.isEmpty()) {
+                return scored.stream()
+                    .sorted(Comparator.comparingInt(ScoredSuggestion::score).reversed())
+                    .map(ScoredSuggestion::suggestion)
+                    .limit(20)
+                    .toList();
+            }
+
+            // Workaround: if text matching returned nothing, show nearby places from current bbox anyway.
+            return allSuggestions.stream().limit(20).toList();
         } catch (Exception ignored) {
             return List.of();
         }
@@ -122,6 +152,8 @@ public class GeoapifyService {
             return false;
         }
     }
+
+    private record ScoredSuggestion(GeoPlaceSuggestion suggestion, int score) {}
 
     public record GeoPlaceSuggestion(String name, String address, double latitude, double longitude) {}
 }
