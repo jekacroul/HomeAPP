@@ -8,6 +8,7 @@ import com.example.demo.repository.ReviewRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,7 @@ public class HomeController {
     public String home(Model model, Authentication authentication) {
         List<Place> places = placeRepository.findAll();
         model.addAttribute("places", places);
-        
-        if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            userRepository.findByEmail(email).ifPresent(user -> 
-                model.addAttribute("currentUser", user));
-        }
+        addCurrentUserToModel(model, authentication);
         
         return "home";
     }
@@ -48,12 +44,7 @@ public class HomeController {
         
         List<Review> reviews = reviewRepository.findByPlaceId(id);
         model.addAttribute("reviews", reviews);
-        
-        if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            userRepository.findByEmail(email).ifPresent(user -> 
-                model.addAttribute("currentUser", user));
-        }
+        addCurrentUserToModel(model, authentication);
         
         return "place-detail";
     }
@@ -105,5 +96,44 @@ public class HomeController {
         place.setRating(0.0);
         placeRepository.save(place);
         return "redirect:/";
+    }
+
+    @GetMapping("/admin")
+    public String adminDashboard(Model model, Authentication authentication) {
+        addCurrentUserToModel(model, authentication);
+        model.addAttribute("users", userRepository.findAll());
+        model.addAttribute("places", placeRepository.findAll());
+        return "admin-dashboard";
+    }
+
+    @PostMapping("/admin/place/{id}/delete")
+    public String deletePlace(@PathVariable Long id) {
+        placeRepository.deleteById(id);
+        return "redirect:/admin?deletedPlace=true";
+    }
+
+    @PostMapping("/admin/user/{id}/toggle-ban")
+    public String toggleUserBan(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentEmail = authentication.getName();
+
+        userRepository.findById(id).ifPresent(user -> {
+            if (user.getEmail().equalsIgnoreCase(currentEmail) || user.getRole() == User.Role.ADMIN) {
+                return;
+            }
+            user.setBanned(!user.isBanned());
+            userRepository.save(user);
+        });
+
+        return "redirect:/admin?updatedUser=true";
+    }
+
+    private void addCurrentUserToModel(Model model, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return;
+        }
+
+        String email = authentication.getName();
+        userRepository.findByEmail(email).ifPresent(user -> model.addAttribute("currentUser", user));
     }
 }

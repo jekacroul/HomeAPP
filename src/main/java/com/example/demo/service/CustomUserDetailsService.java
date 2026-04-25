@@ -9,7 +9,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.Optional;
 
 @Service
@@ -32,7 +31,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
             user.getEmail(),
             user.getPassword(),
-            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+            !user.isBanned(),
+            true,
+            true,
+            !user.isBanned(),
+            java.util.Collections.singletonList(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
         ) {
             @Override
             public String toString() {

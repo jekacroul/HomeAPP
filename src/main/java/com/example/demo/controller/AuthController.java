@@ -3,10 +3,6 @@ package com.example.demo.controller;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,7 +25,8 @@ public class AuthController {
     }
     
     @GetMapping("/register")
-    public String registerPage() {
+    public String registerPage(Model model) {
+        model.addAttribute("user", new User());
         return "register";
     }
     
@@ -44,6 +41,8 @@ public class AuthController {
         newUser.setEmail(user.getEmail());
         newUser.setPassword(passwordEncoder.encode(user.getPassword()));
         newUser.setName(user.getName());
+        newUser.setRole(User.Role.USER);
+        newUser.setBanned(false);
         
         userRepository.save(newUser);
         // Автоматический вход после регистрации

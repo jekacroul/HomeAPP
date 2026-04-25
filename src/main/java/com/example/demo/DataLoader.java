@@ -1,9 +1,12 @@
 package com.example.demo;
 
 import com.example.demo.model.Place;
+import com.example.demo.model.User;
 import com.example.demo.repository.PlaceRepository;
+import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,9 +14,17 @@ public class DataLoader implements CommandLineRunner {
     
     @Autowired
     private PlaceRepository placeRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     
     @Override
     public void run(String... args) {
+        createAdminIfMissing();
+
         if (placeRepository.count() == 0) {
             Place place1 = new Place();
             place1.setName("Coffee & Work");
@@ -57,5 +68,19 @@ public class DataLoader implements CommandLineRunner {
             place3.setRating(3.5);
             placeRepository.save(place3);
         }
+    }
+
+    private void createAdminIfMissing() {
+        if (userRepository.findByEmail("admin@homeapp.local").isPresent()) {
+            return;
+        }
+
+        User admin = new User();
+        admin.setName("Администратор");
+        admin.setEmail("admin@homeapp.local");
+        admin.setPassword(passwordEncoder.encode("admin123"));
+        admin.setRole(User.Role.ADMIN);
+        admin.setBanned(false);
+        userRepository.save(admin);
     }
 }

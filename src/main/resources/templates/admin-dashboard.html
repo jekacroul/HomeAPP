@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - Где работать</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar">
+    <div class="container nav-content">
+        <a href="/" class="logo">📍 Где работать</a>
+        <div class="nav-links">
+            <span class="user-info">Админ: <span sec:authentication="principal.displayName"></span></span>
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit" class="btn btn-outline">Выйти</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<main class="container page-content">
+    <a href="/" class="back-link">← На главную</a>
+
+    <section class="admin-panel">
+        <h1>Админ-панель</h1>
+        <p class="admin-panel-subtitle">Управление пользователями и местами.</p>
+
+        <div th:if="${param.deletedPlace}" class="alert alert-success">Место удалено.</div>
+        <div th:if="${param.updatedUser}" class="alert alert-success">Статус пользователя обновлён.</div>
+
+        <div class="admin-grid">
+            <div class="admin-card">
+                <h2>Пользователи</h2>
+                <div class="admin-list">
+                    <div class="admin-list-row" th:each="user : ${users}">
+                        <div>
+                            <strong th:text="${user.name != null && !#strings.isEmpty(user.name) ? user.name : user.email}">Имя</strong>
+                            <div class="muted" th:text="${user.email}">email@example.com</div>
+                            <span class="badge" th:text="${user.role.name()}">USER</span>
+                            <span class="badge badge-banned" th:if="${user.banned}">BANNED</span>
+                        </div>
+
+                        <form th:if="${user.role.name() != 'ADMIN' and currentUser != null and user.id != currentUser.id}"
+                              th:action="@{/admin/user/{id}/toggle-ban(id=${user.id})}" method="post">
+                            <button type="submit" class="btn"
+                                    th:classappend="${user.banned} ? ' btn-primary' : ' btn-danger'"
+                                    th:text="${user.banned} ? 'Разбанить' : 'Забанить'">
+                                Забанить
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Места</h2>
+                <div class="admin-list">
+                    <div class="admin-list-row" th:each="place : ${places}">
+                        <div>
+                            <strong th:text="${place.name}">Название</strong>
+                            <div class="muted" th:text="${place.address}">Адрес</div>
+                        </div>
+                        <form th:action="@{/admin/place/{id}/delete(id=${place.id})}" method="post">
+                            <button type="submit" class="btn btn-danger">Удалить</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>
