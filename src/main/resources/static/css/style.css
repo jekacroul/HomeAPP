@@ -408,6 +408,59 @@ body.home-page {
     border: 1px solid #e5e7eb;
 }
 
+.review-image-clickable {
+    cursor: zoom-in;
+}
+
+.review-image-clickable:focus {
+    outline: 3px solid #667eea;
+    outline-offset: 2px;
+}
+
+.no-scroll {
+    overflow: hidden;
+}
+
+.image-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 3000;
+}
+
+.image-modal[hidden] {
+    display: none;
+}
+
+.image-modal-content {
+    max-width: min(1200px, 96vw);
+    max-height: 92vh;
+    width: auto;
+    height: auto;
+    border-radius: 12px;
+    object-fit: contain;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+.image-modal-close {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 999px;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.92);
+    color: #111827;
+}
+
 .review-actions {
     margin-top: 16px;
     display: flex;

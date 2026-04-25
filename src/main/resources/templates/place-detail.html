@@ -85,7 +85,13 @@
                     <span th:text="'(' + ${review.user.email} + ')'">(email)</span>
                 </p>
                 <p class="review-comment" th:text="${review.comment}">Отличный отзыв</p>
-                <img th:if="${review.imageUrl != null and !review.imageUrl.isBlank()}" th:src="${review.imageUrl}" alt="Фото к отзыву" class="review-image"/>
+                <img th:if="${review.imageUrl != null and !review.imageUrl.isBlank()}"
+                     th:src="${review.imageUrl}"
+                     alt="Фото к отзыву"
+                     class="review-image review-image-clickable"
+                     loading="lazy"
+                     role="button"
+                     tabindex="0"/>
 
                 <div class="review-actions" th:if="${currentUser != null and (review.user.id == currentUser.id or isAdmin)}">
                     <details class="review-edit-box">
@@ -156,6 +162,11 @@
     </section>
 </main>
 
+<div id="review-image-modal" class="image-modal" hidden>
+    <button id="review-image-modal-close" type="button" class="image-modal-close" aria-label="Закрыть просмотр фото">✕</button>
+    <img id="review-image-modal-img" src="" alt="Фото из отзыва в полном размере" class="image-modal-content">
+</div>
+
 <footer class="footer">
     <div class="container">
         <p>© 2026 Где работать. Приложение для удалёнщиков.</p>
@@ -176,6 +187,48 @@
         }).addTo(map);
         L.marker([lat, lon]).addTo(map);
     }
+</script>
+<script>
+    const reviewImageModal = document.getElementById('review-image-modal');
+    const reviewImageModalImg = document.getElementById('review-image-modal-img');
+    const reviewImageModalClose = document.getElementById('review-image-modal-close');
+    const reviewImages = document.querySelectorAll('.review-image-clickable');
+
+    function openReviewImageModal(src, alt) {
+        reviewImageModalImg.src = src;
+        reviewImageModalImg.alt = alt || 'Фото из отзыва в полном размере';
+        reviewImageModal.hidden = false;
+        document.body.classList.add('no-scroll');
+    }
+
+    function closeReviewImageModal() {
+        reviewImageModal.hidden = true;
+        reviewImageModalImg.src = '';
+        document.body.classList.remove('no-scroll');
+    }
+
+    reviewImages.forEach((img) => {
+        img.addEventListener('click', () => openReviewImageModal(img.src, img.alt));
+        img.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openReviewImageModal(img.src, img.alt);
+            }
+        });
+    });
+
+    reviewImageModalClose.addEventListener('click', closeReviewImageModal);
+    reviewImageModal.addEventListener('click', (event) => {
+        if (event.target === reviewImageModal) {
+            closeReviewImageModal();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !reviewImageModal.hidden) {
+            closeReviewImageModal();
+        }
+    });
 </script>
 </body>
 </html>
