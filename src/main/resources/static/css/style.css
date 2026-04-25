@@ -17,6 +17,18 @@ main {
     flex: 1 0 auto;
 }
 
+body.home-page {
+    height: 100vh;
+    overflow: hidden;
+}
+
+.home-main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 110px;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -179,9 +191,18 @@ main {
 /* Places Grid */
 .places-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 30px;
     margin-bottom: 60px;
+    overflow-y: auto;
+    padding-right: 8px;
+    align-content: start;
+}
+
+@media (min-width: 1280px) {
+    .places-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 .place-card {
@@ -500,6 +521,14 @@ main {
     text-align: center;
     padding: 30px 20px;
     margin-top: auto;
+}
+
+.footer-fixed {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 900;
 }
 
 /* Responsive */
