@@ -119,8 +119,11 @@ public class HomeController {
 
     @GetMapping(value = "/api/minsk-places", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public List<GeoapifyService.GeoPlaceSuggestion> searchMinskPlaces(@RequestParam("query") String query) {
-        return geoapifyService.searchInMinsk(query, 10);
+    public List<GeoapifyService.GeoPlaceSuggestion> searchMinskPlaces(
+        @RequestParam(value = "query", required = false) String query,
+        @RequestParam(value = "bbox", required = false) String bbox
+    ) {
+        return geoapifyService.searchInMinsk(query, 100, bbox);
     }
 
     @PostMapping(value = "/add-place", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

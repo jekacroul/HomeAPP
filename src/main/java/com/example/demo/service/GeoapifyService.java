@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -20,8 +21,20 @@ public class GeoapifyService {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${geoapify.places-url}")
-    private String placesUrl;
+    @Value("${geoapify.places-api-url}")
+    private String placesApiUrl;
+
+    @Value("${geoapify.places-categories}")
+    private String categories;
+
+    @Value("${geoapify.default-rect}")
+    private String defaultRect;
+
+    @Value("${geoapify.search-limit:100}")
+    private int searchLimit;
+
+    @Value("${geoapify.api-key}")
+    private String apiKey;
 
     public GeoapifyService() {
         this.httpClient = HttpClient.newBuilder()
@@ -29,10 +42,21 @@ public class GeoapifyService {
             .build();
     }
 
-    public List<GeoPlaceSuggestion> searchInMinsk(String query, int limit) {
+    public List<GeoPlaceSuggestion> searchInMinsk(String query, int limit, String bbox) {
         try {
+            String rect = isValidRect(bbox) ? bbox : defaultRect;
+            int safeLimit = Math.max(20, Math.min(Math.max(limit, searchLimit), 500));
+
+            URI uri = UriComponentsBuilder.fromUriString(placesApiUrl)
+                .queryParam("categories", categories)
+                .queryParam("filter", "rect:" + rect)
+                .queryParam("limit", safeLimit)
+                .queryParam("apiKey", apiKey)
+                .build(true)
+                .toUri();
+
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(placesUrl))
+                .uri(uri)
                 .timeout(Duration.ofSeconds(15))
                 .GET()
                 .build();
@@ -80,14 +104,31 @@ public class GeoapifyService {
                 }
 
                 suggestions.add(new GeoPlaceSuggestion(name, address, lat, lon));
-                if (suggestions.size() >= limit) {
-                    break;
-                }
             }
 
             return suggestions;
         } catch (Exception ignored) {
             return List.of();
+        }
+    }
+
+    private boolean isValidRect(String bbox) {
+        if (bbox == null || bbox.isBlank()) {
+            return false;
+        }
+
+        String[] parts = bbox.split(",");
+        if (parts.length != 4) {
+            return false;
+        }
+
+        try {
+            for (String part : parts) {
+                Double.parseDouble(part.trim());
+            }
+            return true;
+        } catch (NumberFormatException ex) {
+            return false;
         }
     }
 

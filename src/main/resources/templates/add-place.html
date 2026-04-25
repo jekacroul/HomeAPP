@@ -115,6 +115,7 @@
     }).addTo(map);
 
     let marker = null;
+    let searchMarkers = [];
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
 
@@ -138,6 +139,11 @@
     const searchButton = document.getElementById('geo-search-btn');
     const resultsBox = document.getElementById('geo-results');
 
+    function clearSearchMarkers() {
+        searchMarkers.forEach(item => map.removeLayer(item));
+        searchMarkers = [];
+    }
+
     async function searchPlaces() {
         const query = searchInput.value.trim();
         if (!query) {
@@ -148,8 +154,16 @@
         resultsBox.innerHTML = '<div class="result-item muted">Ищем...</div>';
 
         try {
-            const response = await fetch(`/api/minsk-places?query=${encodeURIComponent(query)}`);
+            const bounds = map.getBounds();
+            const bbox = `${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
+            const response = await fetch(`/api/minsk-places?query=${encodeURIComponent(query)}&bbox=${encodeURIComponent(bbox)}`);
+            if (!response.ok) {
+                throw new Error('API request failed');
+            }
+
             const places = await response.json();
+
+            clearSearchMarkers();
 
             if (!places.length) {
                 resultsBox.innerHTML = '<div class="result-item muted">Ничего не найдено. Попробуйте другой запрос.</div>';
@@ -163,14 +177,24 @@
                 item.className = 'result-item';
                 item.textContent = `${place.name} — ${place.address}`;
 
+                const pointMarker = L.marker([place.latitude, place.longitude]).addTo(map);
+                pointMarker.bindPopup(`${place.name}<br>${place.address}`);
+                searchMarkers.push(pointMarker);
+
                 item.addEventListener('click', () => {
                     document.getElementById('name').value = place.name;
                     document.getElementById('address').value = place.address;
                     setMarker(place.latitude, place.longitude);
+                    pointMarker.openPopup();
                 });
 
                 resultsBox.appendChild(item);
             });
+
+            if (searchMarkers.length) {
+                const group = L.featureGroup(searchMarkers);
+                map.fitBounds(group.getBounds().pad(0.2));
+            }
         } catch (e) {
             resultsBox.innerHTML = '<div class="result-item muted">Не удалось получить данные из API.</div>';
         }
