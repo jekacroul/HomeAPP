@@ -174,18 +174,44 @@
                 return collected;
             };
 
+            const deduplicatePlaces = (items) => {
+                const seen = new Set();
+                return items.filter((item) => {
+                    const key = item.name + '|' + item.address + '|' + item.latitude.toFixed(6) + '|' + item.longitude.toFixed(6);
+                    if (seen.has(key)) {
+                        return false;
+                    }
+                    seen.add(key);
+                    return true;
+                });
+            };
+
             let places = [];
 
             try {
-                const bizSearch = await ymaps.geocode(query + ', Минск', {
+                const orgSearch = await ymaps.geocode(query, {
+                    provider: 'yandex#search',
                     boundedBy: area,
-                    strictBounds: false,
-                    kind: 'biz',
+                    strictBounds: true,
                     results: 20
                 });
-                places = collectPlaces(bizSearch.geoObjects);
+                places = collectPlaces(orgSearch.geoObjects);
             } catch (ignored) {
                 places = [];
+            }
+
+            if (!places.length) {
+                try {
+                    const orgFallback = await ymaps.geocode(query + ', Минск', {
+                        provider: 'yandex#search',
+                        boundedBy: area,
+                        strictBounds: false,
+                        results: 20
+                    });
+                    places = collectPlaces(orgFallback.geoObjects);
+                } catch (ignored) {
+                    places = [];
+                }
             }
 
             if (!places.length) {
@@ -197,6 +223,7 @@
                 places = collectPlaces(fallbackSearch.geoObjects);
             }
 
+            places = deduplicatePlaces(places);
             clearSearchMarkers();
 
             if (!places.length) {
