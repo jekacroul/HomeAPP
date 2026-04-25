@@ -156,44 +156,47 @@
             const northEast = [north, east];
             const area = [southWest, northEast];
 
-            const suggestions = await ymaps.suggest(query + ', Минск', {
-                boundedBy: area,
-                results: 20
-            });
-
-            const suggestionValues = suggestions
-                .map((item) => item.value)
-                .filter((value, index, arr) => value && arr.indexOf(value) === index)
-                .slice(0, 15);
-
-            const geocodeResults = await Promise.all(
-                suggestionValues.map(async (value) => {
-                    const result = await ymaps.geocode(value, {
-                        boundedBy: area,
-                        strictBounds: false,
-                        results: 1
-                    });
-
-                    const firstGeoObject = result.geoObjects.get(0);
-                    if (!firstGeoObject) {
-                        return null;
-                    }
-
-                    const coords = firstGeoObject.geometry.getCoordinates();
+            const collectPlaces = (geoObjectCollection) => {
+                const collected = [];
+                geoObjectCollection.each((geoObject) => {
+                    const coords = geoObject.geometry.getCoordinates();
                     if (!coords || coords.length < 2) {
-                        return null;
+                        return;
                     }
 
-                    return {
-                        name: firstGeoObject.properties.get('name') || value,
-                        address: firstGeoObject.getAddressLine() || firstGeoObject.properties.get('text') || value,
+                    collected.push({
+                        name: geoObject.properties.get('name') || 'Без названия',
+                        address: geoObject.getAddressLine() || geoObject.properties.get('text') || 'Без адреса',
                         latitude: coords[0],
                         longitude: coords[1]
-                    };
-                })
-            );
+                    });
+                });
+                return collected;
+            };
 
-            const places = geocodeResults.filter(Boolean);
+            let places = [];
+
+            try {
+                const bizSearch = await ymaps.geocode(query + ', Минск', {
+                    boundedBy: area,
+                    strictBounds: false,
+                    kind: 'biz',
+                    results: 20
+                });
+                places = collectPlaces(bizSearch.geoObjects);
+            } catch (ignored) {
+                places = [];
+            }
+
+            if (!places.length) {
+                const fallbackSearch = await ymaps.geocode(query + ', Минск', {
+                    boundedBy: area,
+                    strictBounds: false,
+                    results: 20
+                });
+                places = collectPlaces(fallbackSearch.geoObjects);
+            }
+
             clearSearchMarkers();
 
             if (!places.length) {
