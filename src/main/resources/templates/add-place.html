@@ -152,7 +152,7 @@
             const west = Math.min(first[1], second[1]);
             const east = Math.max(first[1], second[1]);
 
-            const geocodeResult = await ymaps.geocode(`Минск ${query}`, {
+            const geocodeResult = await ymaps.geocode('Минск ' + query, {
                 boundedBy: [[south, west], [north, east]],
                 strictBounds: true,
                 results: 20
@@ -189,11 +189,11 @@
                 const item = document.createElement('button');
                 item.type = 'button';
                 item.className = 'result-item';
-                item.textContent = `${place.name} — ${place.address}`;
+                item.textContent = place.name + ' — ' + place.address;
 
                 const point = new ymaps.Placemark(
                     [place.latitude, place.longitude],
-                    {balloonContent: `${place.name}<br>${place.address}`},
+                    {balloonContent: place.name + '<br>' + place.address},
                     {preset: 'islands#blueDotIcon'}
                 );
                 map.geoObjects.add(point);
