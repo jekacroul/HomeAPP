@@ -152,13 +152,48 @@
             const west = Math.min(first[1], second[1]);
             const east = Math.max(first[1], second[1]);
 
-            const bbox = west + ',' + north + ',' + east + ',' + south;
-            const response = await fetch('/api/minsk-places?query=' + encodeURIComponent(query) + '&bbox=' + encodeURIComponent(bbox));
-            if (!response.ok) {
-                throw new Error('API request failed');
-            }
+            const southWest = [south, west];
+            const northEast = [north, east];
+            const area = [southWest, northEast];
 
-            const places = await response.json();
+            const suggestions = await ymaps.suggest(query + ', Минск', {
+                boundedBy: area,
+                results: 20
+            });
+
+            const suggestionValues = suggestions
+                .map((item) => item.value)
+                .filter((value, index, arr) => value && arr.indexOf(value) === index)
+                .slice(0, 15);
+
+            const geocodeResults = await Promise.all(
+                suggestionValues.map(async (value) => {
+                    const result = await ymaps.geocode(value, {
+                        boundedBy: area,
+                        strictBounds: false,
+                        results: 1
+                    });
+
+                    const firstGeoObject = result.geoObjects.get(0);
+                    if (!firstGeoObject) {
+                        return null;
+                    }
+
+                    const coords = firstGeoObject.geometry.getCoordinates();
+                    if (!coords || coords.length < 2) {
+                        return null;
+                    }
+
+                    return {
+                        name: firstGeoObject.properties.get('name') || value,
+                        address: firstGeoObject.getAddressLine() || firstGeoObject.properties.get('text') || value,
+                        latitude: coords[0],
+                        longitude: coords[1]
+                    };
+                })
+            );
+
+            const places = geocodeResults.filter(Boolean);
             clearSearchMarkers();
 
             if (!places.length) {
