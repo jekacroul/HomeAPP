@@ -35,11 +35,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/uploads/**", "/api/minsk-places").permitAll()
+                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/uploads/**", "/api/minsk-places", "/h2-console/**").permitAll()
                 .requestMatchers("/place/*/delete", "/admin/**").hasRole("ADMIN")
                 .requestMatchers("/place/*").permitAll()
                 .anyRequest().authenticated()
             )
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")

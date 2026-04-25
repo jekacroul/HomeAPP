@@ -574,6 +574,26 @@ body.home-page {
 
 /* Responsive */
 @media (max-width: 768px) {
+    body.home-page {
+        height: auto;
+        min-height: 100vh;
+        overflow: auto;
+    }
+
+    .home-main {
+        min-height: auto;
+        padding-bottom: 24px;
+    }
+
+    .places-grid {
+        overflow-y: visible;
+        padding-right: 0;
+    }
+
+    .footer-fixed {
+        position: static;
+    }
+
     .hero h1 {
         font-size: 1.8rem;
     }
