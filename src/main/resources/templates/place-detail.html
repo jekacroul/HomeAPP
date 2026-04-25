@@ -80,14 +80,54 @@
                     <span class="review-rating">⭐ <span th:text="${review.rating}">5</span></span>
                     <span class="review-date" th:text="${#temporals.format(review.createdAt, 'dd.MM.yyyy')}">01.01.2024</span>
                 </div>
+                <p class="review-author">
+                    👤 <strong th:text="${review.user.name != null and !review.user.name.isBlank() ? review.user.name : review.user.email}">Имя</strong>
+                    <span th:text="'(' + ${review.user.email} + ')'">(email)</span>
+                </p>
                 <p class="review-comment" th:text="${review.comment}">Отличный отзыв</p>
+                <img th:if="${review.imageUrl != null and !review.imageUrl.isBlank()}" th:src="${review.imageUrl}" alt="Фото к отзыву" class="review-image"/>
+
+                <div class="review-actions" th:if="${currentUser != null and (review.user.id == currentUser.id or isAdmin)}">
+                    <details class="review-edit-box">
+                        <summary>Редактировать</summary>
+                        <form th:action="@{/review/{id}/edit(id=${review.id})}" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label>Оценка</label>
+                                <select name="rating" required>
+                                    <option value="5" th:selected="${review.rating == 5}">⭐⭐⭐⭐⭐ (5)</option>
+                                    <option value="4" th:selected="${review.rating == 4}">⭐⭐⭐⭐ (4)</option>
+                                    <option value="3" th:selected="${review.rating == 3}">⭐⭐⭐ (3)</option>
+                                    <option value="2" th:selected="${review.rating == 2}">⭐⭐ (2)</option>
+                                    <option value="1" th:selected="${review.rating == 1}">⭐ (1)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Комментарий</label>
+                                <textarea name="comment" rows="3" required th:text="${review.comment}"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Новое фото (необязательно)</label>
+                                <input type="file" name="imageFile" accept="image/*">
+                            </div>
+                            <label class="checkbox-label" th:if="${review.imageUrl != null and !review.imageUrl.isBlank()}">
+                                <input type="checkbox" name="removeImage" value="true">
+                                <span>Удалить текущее фото</span>
+                            </label>
+                            <button type="submit" class="btn btn-secondary">Сохранить</button>
+                        </form>
+                    </details>
+
+                    <form th:action="@{/review/{id}/delete(id=${review.id})}" method="post">
+                        <button type="submit" class="btn btn-outline">Удалить комментарий</button>
+                    </form>
+                </div>
             </div>
             <p th:if="${#lists.isEmpty(reviews)}" class="no-reviews">Пока нет отзывов. Будьте первым!</p>
         </div>
 
         <div sec:authorize="isAuthenticated()" class="add-review-form">
             <h3>Оставить отзыв</h3>
-            <form th:action="@{/place/{id}/review(id=${place.id})}" method="post">
+            <form th:action="@{/place/{id}/review(id=${place.id})}" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="rating">Оценка</label>
                     <select id="rating" name="rating" required>
@@ -101,6 +141,10 @@
                 <div class="form-group">
                     <label for="comment">Комментарий</label>
                     <textarea id="comment" name="comment" rows="4" placeholder="Расскажите о вашем опыте..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="imageFile">Фото к комментарию (необязательно)</label>
+                    <input id="imageFile" type="file" name="imageFile" accept="image/*">
                 </div>
                 <button type="submit" class="btn btn-primary">Отправить отзыв</button>
             </form>

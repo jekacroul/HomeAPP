@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Controller
@@ -47,11 +48,7 @@ public class HomeController {
         List<Place> places = placeRepository.findAll();
         model.addAttribute("places", places);
 
-        if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            userRepository.findByEmail(email).ifPresent(user ->
-                model.addAttribute("currentUser", user));
-        }
+        getCurrentUser(authentication).ifPresent(user -> model.addAttribute("currentUser", user));
 
         return "home";
     }
@@ -62,23 +59,24 @@ public class HomeController {
             .orElseThrow(() -> new RuntimeException("Place not found"));
         model.addAttribute("place", place);
 
-        List<Review> reviews = reviewRepository.findByPlaceId(id);
+        List<Review> reviews = reviewRepository.findByPlaceIdOrderByCreatedAtDesc(id);
         model.addAttribute("reviews", reviews);
         model.addAttribute("mapTileUrl", mapTileUrl);
+        model.addAttribute("isAdmin", false);
 
-        if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            userRepository.findByEmail(email).ifPresent(user ->
-                model.addAttribute("currentUser", user));
-        }
+        getCurrentUser(authentication).ifPresent(user -> {
+            model.addAttribute("currentUser", user);
+            model.addAttribute("isAdmin", user.getRole() == User.Role.ADMIN);
+        });
 
         return "place-detail";
     }
 
-    @PostMapping("/place/{id}/review")
+    @PostMapping(value = "/place/{id}/review", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public String addReview(@PathVariable Long id,
                             @RequestParam Integer rating,
                             @RequestParam String comment,
+                            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
                             Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/login";
@@ -87,8 +85,7 @@ public class HomeController {
         Place place = placeRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Place not found"));
 
-        String email = authentication.getName();
-        User user = userRepository.findByEmail(email)
+        User user = getCurrentUser(authentication)
             .orElseThrow(() -> new RuntimeException("User not found"));
 
         Review review = new Review();
@@ -96,18 +93,71 @@ public class HomeController {
         review.setUser(user);
         review.setRating(rating);
         review.setComment(comment);
+        review.setImageUrl(resolveImage(imageFile, null, "uploads/reviews"));
 
         reviewRepository.save(review);
-
-        List<Review> placeReviews = reviewRepository.findByPlaceId(id);
-        double avgRating = placeReviews.stream()
-            .mapToInt(Review::getRating)
-            .average()
-            .orElse(0.0);
-        place.setRating(avgRating);
-        placeRepository.save(place);
+        recalculatePlaceRating(id);
 
         return "redirect:/place/" + id;
+    }
+
+    @PostMapping(value = "/review/{reviewId}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String editReview(@PathVariable Long reviewId,
+                             @RequestParam Integer rating,
+                             @RequestParam String comment,
+                             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+                             @RequestParam(value = "removeImage", required = false, defaultValue = "false") Boolean removeImage,
+                             Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        Review review = reviewRepository.findById(reviewId)
+            .orElseThrow(() -> new RuntimeException("Review not found"));
+
+        User currentUser = getCurrentUser(authentication)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!canManageReview(review, currentUser)) {
+            return "redirect:/place/" + review.getPlace().getId();
+        }
+
+        review.setRating(rating);
+        review.setComment(comment);
+
+        if (Boolean.TRUE.equals(removeImage)) {
+            review.setImageUrl(null);
+        }
+        String updatedImageUrl = resolveImage(imageFile, review.getImageUrl(), "uploads/reviews");
+        review.setImageUrl(updatedImageUrl);
+
+        reviewRepository.save(review);
+        recalculatePlaceRating(review.getPlace().getId());
+
+        return "redirect:/place/" + review.getPlace().getId();
+    }
+
+    @PostMapping("/review/{reviewId}/delete")
+    public String deleteReview(@PathVariable Long reviewId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        Review review = reviewRepository.findById(reviewId)
+            .orElseThrow(() -> new RuntimeException("Review not found"));
+
+        User currentUser = getCurrentUser(authentication)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!canManageReview(review, currentUser)) {
+            return "redirect:/place/" + review.getPlace().getId();
+        }
+
+        Long placeId = review.getPlace().getId();
+        reviewRepository.delete(review);
+        recalculatePlaceRating(placeId);
+
+        return "redirect:/place/" + placeId;
     }
 
     @GetMapping("/add-place")
@@ -131,7 +181,12 @@ public class HomeController {
                            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
                            @RequestParam(value = "imageUrl", required = false) String imageUrl) {
 
-        String finalImageUrl = resolveImage(imageFile, imageUrl);
+        String finalImageUrl = resolveImage(
+            imageFile,
+            imageUrl,
+            "uploads",
+            "https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800"
+        );
         place.setImageUrl(finalImageUrl);
         place.setRating(0.0);
 
@@ -148,10 +203,40 @@ public class HomeController {
         return "redirect:/";
     }
 
-    private String resolveImage(MultipartFile imageFile, String imageUrl) {
+    private Optional<User> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return Optional.empty();
+        }
+        return userRepository.findByEmail(authentication.getName());
+    }
+
+    private boolean canManageReview(Review review, User currentUser) {
+        return currentUser.getRole() == User.Role.ADMIN
+            || review.getUser().getId().equals(currentUser.getId());
+    }
+
+    private void recalculatePlaceRating(Long placeId) {
+        Place place = placeRepository.findById(placeId)
+            .orElseThrow(() -> new RuntimeException("Place not found"));
+
+        List<Review> placeReviews = reviewRepository.findByPlaceId(placeId);
+        double avgRating = placeReviews.stream()
+            .mapToInt(Review::getRating)
+            .average()
+            .orElse(0.0);
+        place.setRating(avgRating);
+
+        placeRepository.save(place);
+    }
+
+    private String resolveImage(MultipartFile imageFile, String imageUrl, String uploadDirName) {
+        return resolveImage(imageFile, imageUrl, uploadDirName, imageUrl);
+    }
+
+    private String resolveImage(MultipartFile imageFile, String imageUrl, String uploadDirName, String fallbackUrl) {
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
-                Path uploadDir = Paths.get("uploads");
+                Path uploadDir = Paths.get(uploadDirName);
                 Files.createDirectories(uploadDir);
 
                 String originalName = imageFile.getOriginalFilename();
@@ -163,9 +248,9 @@ public class HomeController {
                 String fileName = UUID.randomUUID() + extension;
                 Path target = uploadDir.resolve(fileName);
                 Files.copy(imageFile.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-                return "/uploads/" + fileName;
+                return "/" + uploadDirName + "/" + fileName;
             } catch (IOException e) {
-                return "https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800";
+                return fallbackUrl;
             }
         }
 
@@ -173,6 +258,6 @@ public class HomeController {
             return imageUrl;
         }
 
-        return "https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800";
+        return fallbackUrl;
     }
 }

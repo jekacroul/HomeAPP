@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #070a1d url('/images/workspace-bg.png') center / cover no-repeat fixed;
     min-height: 100vh;
     color: #333;
     display: flex;
@@ -390,6 +390,40 @@ body.home-page {
 .review-comment {
     color: #555;
     line-height: 1.6;
+}
+
+.review-author {
+    margin-bottom: 10px;
+    color: #4b5563;
+    font-size: 0.92rem;
+}
+
+.review-image {
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-top: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.review-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.review-edit-box {
+    width: 100%;
+}
+
+.review-edit-box summary {
+    cursor: pointer;
+    color: #667eea;
+    margin-bottom: 10px;
+    font-weight: 600;
 }
 
 .no-reviews {

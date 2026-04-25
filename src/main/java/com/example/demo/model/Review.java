@@ -23,12 +23,22 @@ public class Review {
     
     @Column(length = 2000)
     private String comment;
+
+    @Column(length = 2000)
+    private String imageUrl;
     
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
     
     // Getters and Setters
@@ -46,6 +56,10 @@ public class Review {
     
     public String getComment() { return comment; }
     public void setComment(String comment) { this.comment = comment; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
