@@ -108,7 +108,6 @@
     let map;
     let marker;
     let searchMarkers = [];
-    let searchControl;
 
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
@@ -157,46 +156,13 @@
             const northEast = [north, east];
             const area = [southWest, northEast];
 
-            const deduplicatePlaces = (items) => {
-                const seen = new Set();
-                return items.filter((item) => {
-                    const key = item.name + '|' + item.address + '|' + item.latitude.toFixed(6) + '|' + item.longitude.toFixed(6);
-                    if (seen.has(key)) {
-                        return false;
-                    }
-                    seen.add(key);
-                    return true;
-                });
-            };
+            const bbox = west + ',' + north + ',' + east + ',' + south;
+            const response = await fetch('/api/yandex-place-search?query=' + encodeURIComponent(query) + '&bbox=' + encodeURIComponent(bbox));
+            if (!response.ok) {
+                throw new Error('API request failed');
+            }
 
-            searchControl.options.set({
-                boundedBy: area,
-                strictBounds: true,
-                noPlacemark: true,
-                results: 20,
-                provider: 'yandex#search'
-            });
-
-            await searchControl.search(query + ', Минск');
-            const searchResults = searchControl.getResultsArray();
-
-            const places = deduplicatePlaces(
-                searchResults
-                    .map((geoObject) => {
-                        const coords = geoObject.geometry.getCoordinates();
-                        if (!coords || coords.length < 2) {
-                            return null;
-                        }
-                        return {
-                            name: geoObject.properties.get('name') || 'Без названия',
-                            address: geoObject.getAddressLine() || geoObject.properties.get('text') || 'Без адреса',
-                            latitude: coords[0],
-                            longitude: coords[1]
-                        };
-                    })
-                    .filter(Boolean)
-            );
-
+            const places = await response.json();
             clearSearchMarkers();
 
             if (!places.length) {
@@ -247,15 +213,6 @@
             center: minskCenter,
             zoom: 12,
             controls: ['zoomControl', 'fullscreenControl']
-        });
-
-        searchControl = new ymaps.control.SearchControl({
-            options: {
-                provider: 'yandex#search',
-                noPlacemark: true,
-                useMapBounds: false,
-                results: 20
-            }
         });
 
         map.events.add('click', (e) => {
