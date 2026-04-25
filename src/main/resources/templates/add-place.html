@@ -134,20 +134,6 @@
         searchMarkers = [];
     }
 
-    function getCurrentBbox() {
-        const bounds = map.getBounds();
-        if (!bounds || bounds.length !== 2) {
-            return '';
-        }
-
-        const [first, second] = bounds;
-        const south = Math.min(first[0], second[0]);
-        const north = Math.max(first[0], second[0]);
-        const west = Math.min(first[1], second[1]);
-        const east = Math.max(first[1], second[1]);
-
-        return `${west},${north},${east},${south}`;
-    }
 
     async function searchPlaces() {
         const query = searchInput.value.trim();
@@ -159,14 +145,37 @@
         resultsBox.innerHTML = '<div class="result-item muted">Ищем...</div>';
 
         try {
-            const bbox = getCurrentBbox();
-            const response = await fetch(`/api/minsk-places?query=${encodeURIComponent(query)}&bbox=${encodeURIComponent(bbox)}`);
-            if (!response.ok) {
-                throw new Error('API request failed');
-            }
+            const bounds = map.getBounds();
+            const [first, second] = bounds;
+            const south = Math.min(first[0], second[0]);
+            const north = Math.max(first[0], second[0]);
+            const west = Math.min(first[1], second[1]);
+            const east = Math.max(first[1], second[1]);
 
-            const places = await response.json();
+            const geocodeResult = await ymaps.geocode(`Минск ${query}`, {
+                boundedBy: [[south, west], [north, east]],
+                strictBounds: true,
+                results: 20
+            });
+
             clearSearchMarkers();
+            const places = [];
+            geocodeResult.geoObjects.each((geoObject) => {
+                const coords = geoObject.geometry.getCoordinates();
+                if (!coords || coords.length < 2) {
+                    return;
+                }
+
+                const name = geoObject.properties.get('name') || 'Без названия';
+                const address = geoObject.getAddressLine() || geoObject.properties.get('text') || 'Без адреса';
+
+                places.push({
+                    name,
+                    address,
+                    latitude: coords[0],
+                    longitude: coords[1]
+                });
+            });
 
             if (!places.length) {
                 resultsBox.innerHTML = '<div class="result-item muted">Ничего не найдено. Попробуйте другой запрос.</div>';
@@ -207,7 +216,7 @@
                 map.setCenter(allCoordinates[0], 15, {duration: 200});
             }
         } catch (e) {
-            resultsBox.innerHTML = '<div class="result-item muted">Не удалось получить данные из API.</div>';
+            resultsBox.innerHTML = '<div class="result-item muted">Не удалось получить данные из API Яндекс.Карт.</div>';
         }
     }
 
