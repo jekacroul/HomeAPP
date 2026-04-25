@@ -18,23 +18,16 @@ import java.util.Locale;
 @Service
 public class GeoapifyService {
 
+    private static final String DEFAULT_RECT = "27.438915081299548,53.890216642813314,27.520990677155474,53.84386961984724";
+
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${geoapify.places-api-url}")
-    private String placesApiUrl;
-
-    @Value("${geoapify.places-categories}")
-    private String categories;
-
-    @Value("${geoapify.default-rect}")
-    private String defaultRect;
+    @Value("${geoapify.places-url:https://api.geoapify.com/v2/places?categories=catering.cafe,catering.restaurant,catering.fast_food,catering.bar&filter=rect:27.438915081299548,53.890216642813314,27.520990677155474,53.84386961984724&limit=20&apiKey=7aa2f88d19d7416988f9da9e123b5729}")
+    private String placesUrl;
 
     @Value("${geoapify.search-limit:100}")
     private int searchLimit;
-
-    @Value("${geoapify.api-key}")
-    private String apiKey;
 
     public GeoapifyService() {
         this.httpClient = HttpClient.newBuilder()
@@ -44,14 +37,12 @@ public class GeoapifyService {
 
     public List<GeoPlaceSuggestion> searchInMinsk(String query, int limit, String bbox) {
         try {
-            String rect = isValidRect(bbox) ? bbox : defaultRect;
+            String rect = isValidRect(bbox) ? bbox : DEFAULT_RECT;
             int safeLimit = Math.max(20, Math.min(Math.max(limit, searchLimit), 500));
 
-            URI uri = UriComponentsBuilder.fromUriString(placesApiUrl)
-                .queryParam("categories", categories)
-                .queryParam("filter", "rect:" + rect)
-                .queryParam("limit", safeLimit)
-                .queryParam("apiKey", apiKey)
+            URI uri = UriComponentsBuilder.fromUriString(placesUrl)
+                .replaceQueryParam("filter", "rect:" + rect)
+                .replaceQueryParam("limit", safeLimit)
                 .build(true)
                 .toUri();
 
