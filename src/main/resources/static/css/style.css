@@ -18,8 +18,10 @@ main {
 }
 
 body.home-page {
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .home-main {
@@ -194,8 +196,7 @@ body.home-page {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 30px;
     margin-bottom: 60px;
-    overflow-y: auto;
-    padding-right: 8px;
+    overflow: visible;
     align-content: start;
 }
 
@@ -407,6 +408,55 @@ body.home-page {
     border: 1px solid #e5e7eb;
 }
 
+.review-image-clickable {
+    cursor: zoom-in;
+}
+
+.review-image-clickable:focus {
+    outline: 3px solid #667eea;
+    outline-offset: 2px;
+}
+
+.no-scroll {
+    overflow: hidden;
+}
+
+.image-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 3000;
+}
+
+.image-modal-content {
+    max-width: min(1200px, 96vw);
+    max-height: 92vh;
+    width: auto;
+    height: auto;
+    border-radius: 12px;
+    object-fit: contain;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+.image-modal-close {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 999px;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.92);
+    color: #111827;
+}
+
 .review-actions {
     margin-top: 16px;
     display: flex;
@@ -574,6 +624,14 @@ body.home-page {
 
 /* Responsive */
 @media (max-width: 768px) {
+    body {
+        background-attachment: scroll;
+    }
+
+    body.home-page {
+        height: auto;
+    }
+
     .hero h1 {
         font-size: 1.8rem;
     }
@@ -589,6 +647,10 @@ body.home-page {
     
     .form-row {
         grid-template-columns: 1fr;
+    }
+
+    .footer-fixed {
+        position: static;
     }
 }
 
