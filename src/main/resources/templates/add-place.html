@@ -108,6 +108,7 @@
     let map;
     let marker;
     let searchMarkers = [];
+    let searchControl;
 
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
@@ -156,24 +157,6 @@
             const northEast = [north, east];
             const area = [southWest, northEast];
 
-            const collectPlaces = (geoObjectCollection) => {
-                const collected = [];
-                geoObjectCollection.each((geoObject) => {
-                    const coords = geoObject.geometry.getCoordinates();
-                    if (!coords || coords.length < 2) {
-                        return;
-                    }
-
-                    collected.push({
-                        name: geoObject.properties.get('name') || 'Без названия',
-                        address: geoObject.getAddressLine() || geoObject.properties.get('text') || 'Без адреса',
-                        latitude: coords[0],
-                        longitude: coords[1]
-                    });
-                });
-                return collected;
-            };
-
             const deduplicatePlaces = (items) => {
                 const seen = new Set();
                 return items.filter((item) => {
@@ -186,44 +169,34 @@
                 });
             };
 
-            let places = [];
+            searchControl.options.set({
+                boundedBy: area,
+                strictBounds: true,
+                noPlacemark: true,
+                results: 20,
+                provider: 'yandex#search'
+            });
 
-            try {
-                const orgSearch = await ymaps.geocode(query, {
-                    provider: 'yandex#search',
-                    boundedBy: area,
-                    strictBounds: true,
-                    results: 20
-                });
-                places = collectPlaces(orgSearch.geoObjects);
-            } catch (ignored) {
-                places = [];
-            }
+            await searchControl.search(query + ', Минск');
+            const searchResults = searchControl.getResultsArray();
 
-            if (!places.length) {
-                try {
-                    const orgFallback = await ymaps.geocode(query + ', Минск', {
-                        provider: 'yandex#search',
-                        boundedBy: area,
-                        strictBounds: false,
-                        results: 20
-                    });
-                    places = collectPlaces(orgFallback.geoObjects);
-                } catch (ignored) {
-                    places = [];
-                }
-            }
+            const places = deduplicatePlaces(
+                searchResults
+                    .map((geoObject) => {
+                        const coords = geoObject.geometry.getCoordinates();
+                        if (!coords || coords.length < 2) {
+                            return null;
+                        }
+                        return {
+                            name: geoObject.properties.get('name') || 'Без названия',
+                            address: geoObject.getAddressLine() || geoObject.properties.get('text') || 'Без адреса',
+                            latitude: coords[0],
+                            longitude: coords[1]
+                        };
+                    })
+                    .filter(Boolean)
+            );
 
-            if (!places.length) {
-                const fallbackSearch = await ymaps.geocode(query + ', Минск', {
-                    boundedBy: area,
-                    strictBounds: false,
-                    results: 20
-                });
-                places = collectPlaces(fallbackSearch.geoObjects);
-            }
-
-            places = deduplicatePlaces(places);
             clearSearchMarkers();
 
             if (!places.length) {
@@ -274,6 +247,15 @@
             center: minskCenter,
             zoom: 12,
             controls: ['zoomControl', 'fullscreenControl']
+        });
+
+        searchControl = new ymaps.control.SearchControl({
+            options: {
+                provider: 'yandex#search',
+                noPlacemark: true,
+                useMapBounds: false,
+                results: 20
+            }
         });
 
         map.events.add('click', (e) => {
