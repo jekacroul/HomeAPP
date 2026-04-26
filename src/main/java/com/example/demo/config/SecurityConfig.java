@@ -34,8 +34,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/feedback"))
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/uploads/**", "/api/minsk-places").permitAll()
+                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/uploads/**", "/api/minsk-places", "/feedback").permitAll()
                 .requestMatchers("/place/*/delete", "/admin/**").hasRole("ADMIN")
                 .requestMatchers("/place/*").permitAll()
                 .anyRequest().authenticated()
