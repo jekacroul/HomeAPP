@@ -7,6 +7,7 @@ import com.example.demo.repository.PlaceRepository;
 import com.example.demo.repository.ReviewRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.GeoapifyService;
+import com.example.demo.service.TelegramFeedbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -22,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,6 +41,9 @@ public class HomeController {
 
     @Autowired
     private GeoapifyService geoapifyService;
+
+    @Autowired
+    private TelegramFeedbackService telegramFeedbackService;
 
     @Value("${yandex.maps.js-api-url}")
     private String mapApiUrl;
@@ -205,6 +210,34 @@ public class HomeController {
 
         placeRepository.save(place);
         return "redirect:/";
+    }
+
+    @PostMapping(value = "/feedback", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, String> sendFeedback(
+        @RequestParam String name,
+        @RequestParam String email,
+        @RequestParam String message,
+        @RequestParam(value = "screenshots", required = false) MultipartFile[] screenshots
+    ) {
+        List<String> screenshotUrls = resolveImages(screenshots, "uploads/feedback");
+
+        if (!telegramFeedbackService.isConfigured()) {
+            return Map.of(
+                "status", "error",
+                "message", "Фидбек не настроен. Укажите либо feedback.telegram.bot-url, либо feedback.telegram.bot-token + feedback.telegram.chat-id"
+            );
+        }
+
+        boolean sent = telegramFeedbackService.sendFeedback(name, email, message, screenshotUrls);
+        if (!sent) {
+            return Map.of(
+                "status", "error",
+                "message", "Не удалось отправить фидбек в Telegram-бота. Проверьте настройки feedback.telegram.bot-url или feedback.telegram.bot-token/feedback.telegram.chat-id"
+            );
+        }
+
+        return Map.of("status", "ok", "message", "Спасибо! Фидбек отправлен.");
     }
 
     private Optional<User> getCurrentUser(Authentication authentication) {
