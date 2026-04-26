@@ -225,7 +225,7 @@ public class HomeController {
         if (!telegramFeedbackService.isConfigured()) {
             return Map.of(
                 "status", "error",
-                "message", "Фидбек-сервис не настроен. Укажите URL в application.properties: feedback.telegram.bot-url="
+                "message", "Фидбек-сервис не настроен. Укажите feedback.telegram.bot-url и feedback.telegram.chat-id в application.properties"
             );
         }
 
@@ -233,7 +233,7 @@ public class HomeController {
         if (!sent) {
             return Map.of(
                 "status", "error",
-                "message", "Не удалось отправить фидбек в Telegram-бота. Проверьте feedback.telegram.bot-url"
+                "message", "Не удалось отправить фидбек. Проверьте feedback.telegram.bot-url и доступность сервиса задач"
             );
         }
 
