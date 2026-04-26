@@ -10,7 +10,7 @@
 <body class="auth-page">
     <div class="auth-container">
         <div class="auth-card">
-            <a href="/" class="logo">📍 Где работать</a>
+            <a th:href="@{/}" class="logo">📍 Где работать</a>
             <h1>Вход</h1>
             
             <div th:if="${param.error}" class="alert alert-error">
