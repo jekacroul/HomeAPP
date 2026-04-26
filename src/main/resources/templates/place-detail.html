@@ -25,7 +25,7 @@
     <a th:href="@{/}" class="back-link">← Назад к списку</a>
 
     <div class="place-detail">
-        <div class="place-detail-image" th:style="'background-image: url(' + ${place.imageUrl} + ')'"></div>
+        <div class="place-detail-image" th:style="|background-image: url('@{${place.imageUrl}}')|"></div>
 
         <div class="place-detail-content">
             <h1 th:text="${place.name}">Название места</h1>
@@ -84,7 +84,7 @@
                 </p>
                 <p class="review-comment" th:text="${review.comment}">Отличный отзыв</p>
                 <img th:if="${review.imageUrl != null and !review.imageUrl.isBlank()}"
-                     th:src="${review.imageUrl}"
+                     th:src="@{${review.imageUrl}}"
                      alt="Фото к отзыву"
                      class="review-image review-image-clickable"
                      loading="lazy"

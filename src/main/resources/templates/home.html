@@ -63,7 +63,7 @@
         <section class="places-grid">
             <div class="place-card" th:each="place : ${places}" 
                  th:classappend="${place.noiseLevel.name() == 'QUIET'} ? 'quiet' : (${place.noiseLevel.name() == 'NOISY'} ? 'noisy' : '')">
-                <div class="place-image" th:style="'background-image: url(' + ${place.imageUrl} + ')'"></div>
+                <div class="place-image" th:style="|background-image: url('@{${place.imageUrl}}')|"></div>
                 <div class="place-content">
                     <div class="place-header">
                         <h3 th:text="${place.name}">Название места</h3>
