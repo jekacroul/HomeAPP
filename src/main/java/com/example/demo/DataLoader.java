@@ -17,6 +17,7 @@ import java.util.List;
 public class DataLoader implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataLoader.class);
+    private static final List<String> LEGACY_PLACE_NAMES = List.of("Coffee & Work", "Coworking Space Hub", "Cafe Relax");
 
     private final PlaceRepository placeRepository;
     private final UserRepository userRepository;
@@ -46,14 +47,19 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) {
         log.info("Running startup data loader tasks.");
         ensureUserColumnsExist();
-
-        int beforeCleanup = placeRepository.findAll().size();
-        placeRepository.deleteByNameIn(List.of("Coffee & Work", "Coworking Space Hub", "Cafe Relax"));
-        int afterCleanup = placeRepository.findAll().size();
-        log.info("Place cleanup completed. Before={}, after={}", beforeCleanup, afterCleanup);
-
+        cleanupLegacyPlaces();
         createAdminFromSeedIfNeeded();
         log.info("Startup data loader tasks completed.");
+    }
+
+    private void cleanupLegacyPlaces() {
+        long beforeCleanup = placeRepository.count();
+        placeRepository.deleteByNameIn(LEGACY_PLACE_NAMES);
+        long afterCleanup = placeRepository.count();
+        log.info("Place cleanup completed. Before={}, after={}, deleted={}",
+            beforeCleanup,
+            afterCleanup,
+            Math.max(0, beforeCleanup - afterCleanup));
     }
 
     private void createAdminFromSeedIfNeeded() {
@@ -61,27 +67,34 @@ public class DataLoader implements CommandLineRunner {
             log.info("Admin seed skipped: app.admin.seed.email is empty.");
             return;
         }
+
         if (adminSeedPasswordHash == null || adminSeedPasswordHash.isBlank()) {
             log.warn("Admin seed skipped: app.admin.seed.password-hash is empty.");
             return;
         }
-        if (!adminSeedPasswordHash.matches("^\\$2[aby]\\$.{56}$")) {
-            throw new IllegalStateException("app.admin.seed.password-hash must be a BCrypt hash");
-        }
 
-        if (userRepository.findByEmail(adminSeedEmail).isEmpty()) {
-            User admin = new User();
-            admin.setEmail(adminSeedEmail);
-            admin.setName(adminSeedName);
-            admin.setPassword(adminSeedPasswordHash);
-            admin.setRole(User.Role.ADMIN);
-            admin.setBanned(false);
-            userRepository.save(admin);
-            log.info("Seed admin created for email={}", adminSeedEmail);
+        validateSeedPasswordHash();
+
+        if (userRepository.findByEmail(adminSeedEmail).isPresent()) {
+            log.info("Admin seed skipped: user with email={} already exists.", adminSeedEmail);
             return;
         }
 
-        log.info("Admin seed skipped: user with email={} already exists.", adminSeedEmail);
+        User admin = new User();
+        admin.setEmail(adminSeedEmail);
+        admin.setName(adminSeedName);
+        admin.setPassword(adminSeedPasswordHash);
+        admin.setRole(User.Role.ADMIN);
+        admin.setBanned(false);
+        userRepository.save(admin);
+
+        log.info("Seed admin created for email={}", adminSeedEmail);
+    }
+
+    private void validateSeedPasswordHash() {
+        if (!adminSeedPasswordHash.matches("^\\$2[aby]\\$.{56}$")) {
+            throw new IllegalStateException("app.admin.seed.password-hash must be a BCrypt hash");
+        }
     }
 
     private void ensureUserColumnsExist() {
