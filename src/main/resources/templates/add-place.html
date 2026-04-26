@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Добавить место - Где работать</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -103,46 +101,39 @@
     </div>
 </main>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script th:inline="javascript">
-    const tileUrl = /*[[${mapTileUrl}]]*/ '';
+<script th:src="${mapApiUrl}" type="text/javascript"></script>
+<script>
     const minskCenter = [53.9023, 27.5615];
 
-    const map = L.map('place-map').setView(minskCenter, 12);
-    L.tileLayer(tileUrl, {
-        attribution: '&copy; OpenStreetMap contributors &copy; Geoapify'
-    }).addTo(map);
-
-    let marker = null;
+    let map;
+    let marker;
     let searchMarkers = [];
+
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
+    const searchInput = document.getElementById('geo-search');
+    const searchButton = document.getElementById('geo-search-btn');
+    const resultsBox = document.getElementById('geo-results');
 
     function setMarker(lat, lon) {
         latitudeInput.value = lat;
         longitudeInput.value = lon;
 
-        if (marker) {
-            marker.setLatLng([lat, lon]);
+        if (!marker) {
+            marker = new ymaps.Placemark([lat, lon], {}, {preset: 'islands#redDotIcon'});
+            map.geoObjects.add(marker);
         } else {
-            marker = L.marker([lat, lon]).addTo(map);
+            marker.geometry.setCoordinates([lat, lon]);
         }
-        map.panTo([lat, lon]);
+
+        map.panTo([lat, lon], {duration: 200});
     }
-
-    map.on('click', function(e) {
-        setMarker(e.latlng.lat, e.latlng.lng);
-    });
-
-    const searchInput = document.getElementById('geo-search');
-    const searchButton = document.getElementById('geo-search-btn');
-    const resultsBox = document.getElementById('geo-results');
 
     function clearSearchMarkers() {
-        searchMarkers.forEach(item => map.removeLayer(item));
+        searchMarkers.forEach((item) => map.geoObjects.remove(item));
         searchMarkers = [];
     }
+
 
     async function searchPlaces() {
         const query = searchInput.value.trim();
@@ -155,14 +146,23 @@
 
         try {
             const bounds = map.getBounds();
-            const bbox = `${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
-            const response = await fetch(`/api/minsk-places?query=${encodeURIComponent(query)}&bbox=${encodeURIComponent(bbox)}`);
+            const [first, second] = bounds;
+            const south = Math.min(first[0], second[0]);
+            const north = Math.max(first[0], second[0]);
+            const west = Math.min(first[1], second[1]);
+            const east = Math.max(first[1], second[1]);
+
+            const southWest = [south, west];
+            const northEast = [north, east];
+            const area = [southWest, northEast];
+
+            const bbox = west + ',' + north + ',' + east + ',' + south;
+            const response = await fetch('/api/minsk-places?query=' + encodeURIComponent(query) + '&bbox=' + encodeURIComponent(bbox));
             if (!response.ok) {
                 throw new Error('API request failed');
             }
 
             const places = await response.json();
-
             clearSearchMarkers();
 
             if (!places.length) {
@@ -171,41 +171,62 @@
             }
 
             resultsBox.innerHTML = '';
-            places.forEach(place => {
+            const allCoordinates = [];
+
+            places.forEach((place) => {
                 const item = document.createElement('button');
                 item.type = 'button';
                 item.className = 'result-item';
-                item.textContent = `${place.name} — ${place.address}`;
+                item.textContent = place.name + ' — ' + place.address;
 
-                const pointMarker = L.marker([place.latitude, place.longitude]).addTo(map);
-                pointMarker.bindPopup(`${place.name}<br>${place.address}`);
-                searchMarkers.push(pointMarker);
+                const point = new ymaps.Placemark(
+                    [place.latitude, place.longitude],
+                    {balloonContent: place.name + '<br>' + place.address},
+                    {preset: 'islands#blueDotIcon'}
+                );
+                map.geoObjects.add(point);
+                searchMarkers.push(point);
+                allCoordinates.push([place.latitude, place.longitude]);
 
                 item.addEventListener('click', () => {
                     document.getElementById('name').value = place.name;
                     document.getElementById('address').value = place.address;
                     setMarker(place.latitude, place.longitude);
-                    pointMarker.openPopup();
+                    point.balloon.open();
                 });
 
                 resultsBox.appendChild(item);
             });
 
-            if (searchMarkers.length) {
-                const group = L.featureGroup(searchMarkers);
-                map.fitBounds(group.getBounds().pad(0.2));
+            if (allCoordinates.length > 1) {
+                map.setBounds(ymaps.util.bounds.fromPoints(allCoordinates), {checkZoomRange: true, duration: 200});
+            } else if (allCoordinates.length === 1) {
+                map.setCenter(allCoordinates[0], 15, {duration: 200});
             }
         } catch (e) {
-            resultsBox.innerHTML = '<div class="result-item muted">Не удалось получить данные из API.</div>';
+            resultsBox.innerHTML = '<div class="result-item muted">Не удалось получить данные из API Яндекс.Карт.</div>';
         }
     }
 
-    searchButton.addEventListener('click', searchPlaces);
-    searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            searchPlaces();
-        }
+    ymaps.ready(() => {
+        map = new ymaps.Map('place-map', {
+            center: minskCenter,
+            zoom: 12,
+            controls: ['zoomControl', 'fullscreenControl']
+        });
+
+        map.events.add('click', (e) => {
+            const coords = e.get('coords');
+            setMarker(coords[0], coords[1]);
+        });
+
+        searchButton.addEventListener('click', searchPlaces);
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchPlaces();
+            }
+        });
     });
 
     document.getElementById('wifi').addEventListener('change', function() {
