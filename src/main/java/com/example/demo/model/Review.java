@@ -2,6 +2,10 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "reviews")
@@ -26,6 +30,11 @@ public class Review {
 
     @Column(length = 2000)
     private String imageUrl;
+
+    @ElementCollection
+    @CollectionTable(name = "review_images", joinColumns = @JoinColumn(name = "review_id"))
+    @Column(name = "image_url", length = 2000)
+    private List<String> imageUrls = new ArrayList<>();
     
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -59,6 +68,27 @@ public class Review {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public List<String> getImageUrls() { return imageUrls; }
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls != null ? new ArrayList<>(imageUrls) : new ArrayList<>();
+    }
+
+    @Transient
+    public List<String> getAllImageUrls() {
+        Set<String> merged = new LinkedHashSet<>();
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            merged.add(imageUrl);
+        }
+        if (imageUrls != null) {
+            for (String url : imageUrls) {
+                if (url != null && !url.isBlank()) {
+                    merged.add(url);
+                }
+            }
+        }
+        return new ArrayList<>(merged);
+    }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
