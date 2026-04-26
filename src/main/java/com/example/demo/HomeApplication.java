@@ -63,6 +63,9 @@ public class HomeApplication extends SpringBootServletInitializer {
             }
         }
 
+        System.setProperty("DB_URL", jdbcUrl);
+        System.setProperty("DATABASE_URL", jdbcUrl);
+        System.setProperty("SPRING_DATASOURCE_URL", jdbcUrl);
         System.setProperty("spring.datasource.url", jdbcUrl);
 
         String username = firstNonBlank(System.getenv("DB_USERNAME"), System.getenv("SPRING_DATASOURCE_USERNAME"));
