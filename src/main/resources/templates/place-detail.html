@@ -10,19 +10,19 @@
 <body>
 <nav class="navbar">
     <div class="container nav-content">
-        <a href="/" class="logo">📍 Где работать</a>
+        <a th:href="@{/}" class="logo">📍 Где работать</a>
         <div class="nav-links">
-            <a sec:authorize="hasRole('ADMIN')" href="/admin" class="btn btn-secondary">Админ-панель</a>
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="btn btn-secondary">Админ-панель</a>
             <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="logout-form">
                 <button type="submit" class="btn btn-outline">Выйти</button>
             </form>
-            <a sec:authorize="!isAuthenticated()" href="/login" class="btn btn-outline">Войти</a>
+            <a sec:authorize="!isAuthenticated()" th:href="@{/login}" class="btn btn-outline">Войти</a>
         </div>
     </div>
 </nav>
 
 <main class="container page-content">
-    <a href="/" class="back-link">← Назад к списку</a>
+    <a th:href="@{/}" class="back-link">← Назад к списку</a>
 
     <div class="place-detail">
         <div class="place-detail-image" th:style="'background-image: url(' + ${place.imageUrl} + ')'"></div>

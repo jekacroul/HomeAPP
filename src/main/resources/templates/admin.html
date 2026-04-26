@@ -10,9 +10,9 @@
 <body>
 <nav class="navbar">
     <div class="container nav-content">
-        <a href="/" class="logo">📍 Где работать</a>
+        <a th:href="@{/}" class="logo">📍 Где работать</a>
         <div class="nav-links">
-            <a href="/add-place" class="btn btn-primary">+ Добавить место</a>
+            <a th:href="@{/add-place}" class="btn btn-primary">+ Добавить место</a>
             <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="logout-form">
                 <button type="submit" class="btn btn-outline">Выйти</button>
             </form>
@@ -21,7 +21,7 @@
 </nav>
 
 <main class="container page-content">
-    <a href="/" class="back-link">← На главную</a>
+    <a th:href="@{/}" class="back-link">← На главную</a>
 
     <section class="admin-section">
         <h1>Админ-панель</h1>
