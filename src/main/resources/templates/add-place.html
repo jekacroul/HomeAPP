@@ -12,9 +12,9 @@
 <body>
 <nav class="navbar">
     <div class="container nav-content">
-        <a href="/" class="logo">📍 Где работать</a>
+        <a th:href="@{/}" href="/" class="logo">📍 Где работать</a>
         <div class="nav-links">
-            <a href="/" class="btn btn-outline">Назад</a>
+            <a th:href="@{/}" href="/" class="btn btn-outline">Назад</a>
         </div>
     </div>
 </nav>
@@ -156,7 +156,8 @@
         try {
             const bounds = map.getBounds();
             const bbox = `${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
-            const response = await fetch(`/api/minsk-places?query=${encodeURIComponent(query)}&bbox=${encodeURIComponent(bbox)}`);
+            const apiBaseUrl = /*[[@{/api/minsk-places}]]*/ '/api/minsk-places';
+            const response = await fetch(`${apiBaseUrl}?query=${encodeURIComponent(query)}&bbox=${encodeURIComponent(bbox)}`);
             if (!response.ok) {
                 throw new Error('API request failed');
             }
