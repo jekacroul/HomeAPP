@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #070a1d url('/images/workspace-bg.png') center / cover no-repeat fixed;
+    background: #070a1d url('../images/workspace-bg.png') center / cover no-repeat fixed;
     min-height: 100vh;
     color: #333;
     display: flex;
