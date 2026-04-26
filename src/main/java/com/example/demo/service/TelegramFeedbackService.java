@@ -1,7 +1,5 @@
 package com.example.demo.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -12,19 +10,17 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class TelegramFeedbackService {
 
-    private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
 
     @Value("${feedback.telegram.bot-url:}")
     private String botUrl;
 
-    public TelegramFeedbackService(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public TelegramFeedbackService() {
         this.httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .build();
@@ -39,19 +35,17 @@ public class TelegramFeedbackService {
             return false;
         }
 
-        Map<String, Object> payload = Map.of(
-            "name", name,
-            "email", email,
-            "message", message,
-            "screenshots", screenshotUrls
-        );
+        String screenshotsJson = screenshotUrls.stream()
+            .map(this::escapeJson)
+            .map(url -> "\"" + url + "\"")
+            .collect(Collectors.joining(","));
 
-        String jsonBody;
-        try {
-            jsonBody = objectMapper.writeValueAsString(payload);
-        } catch (JsonProcessingException e) {
-            return false;
-        }
+        String jsonBody = "{"
+            + "\"name\":\"" + escapeJson(name) + "\","
+            + "\"email\":\"" + escapeJson(email) + "\","
+            + "\"message\":\"" + escapeJson(message) + "\","
+            + "\"screenshots\":[" + screenshotsJson + "]"
+            + "}";
 
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(botUrl))
@@ -69,5 +63,17 @@ public class TelegramFeedbackService {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    private String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t");
     }
 }
