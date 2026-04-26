@@ -76,7 +76,7 @@ public class HomeController {
     public String addReview(@PathVariable Long id,
                             @RequestParam Integer rating,
                             @RequestParam String comment,
-                            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+                            @RequestParam(value = "imageFiles", required = false) MultipartFile[] imageFiles,
                             Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/login";
@@ -93,7 +93,8 @@ public class HomeController {
         review.setUser(user);
         review.setRating(rating);
         review.setComment(comment);
-        review.setImageUrl(resolveImage(imageFile, null, "uploads/reviews"));
+        review.setImageUrls(resolveImages(imageFiles, "uploads/reviews"));
+        review.setImageUrl(null);
 
         reviewRepository.save(review);
         recalculatePlaceRating(id);
@@ -105,7 +106,7 @@ public class HomeController {
     public String editReview(@PathVariable Long reviewId,
                              @RequestParam Integer rating,
                              @RequestParam String comment,
-                             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+                             @RequestParam(value = "imageFiles", required = false) MultipartFile[] imageFiles,
                              @RequestParam(value = "removeImage", required = false, defaultValue = "false") Boolean removeImage,
                              Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -125,11 +126,14 @@ public class HomeController {
         review.setRating(rating);
         review.setComment(comment);
 
+        List<String> currentImages = review.getAllImageUrls();
         if (Boolean.TRUE.equals(removeImage)) {
-            review.setImageUrl(null);
+            currentImages.clear();
         }
-        String updatedImageUrl = resolveImage(imageFile, review.getImageUrl(), "uploads/reviews");
-        review.setImageUrl(updatedImageUrl);
+        currentImages.addAll(resolveImages(imageFiles, "uploads/reviews"));
+
+        review.setImageUrls(currentImages);
+        review.setImageUrl(null);
 
         reviewRepository.save(review);
         recalculatePlaceRating(review.getPlace().getId());
@@ -231,6 +235,24 @@ public class HomeController {
 
     private String resolveImage(MultipartFile imageFile, String imageUrl, String uploadDirName) {
         return resolveImage(imageFile, imageUrl, uploadDirName, imageUrl);
+    }
+
+    private List<String> resolveImages(MultipartFile[] imageFiles, String uploadDirName) {
+        List<String> uploadedUrls = new java.util.ArrayList<>();
+        if (imageFiles == null || imageFiles.length == 0) {
+            return uploadedUrls;
+        }
+
+        for (MultipartFile imageFile : imageFiles) {
+            if (imageFile == null || imageFile.isEmpty()) {
+                continue;
+            }
+            String imageUrl = resolveImage(imageFile, null, uploadDirName, null);
+            if (imageUrl != null && !imageUrl.isBlank()) {
+                uploadedUrls.add(imageUrl);
+            }
+        }
+        return uploadedUrls;
     }
 
     private String resolveImage(MultipartFile imageFile, String imageUrl, String uploadDirName, String fallbackUrl) {

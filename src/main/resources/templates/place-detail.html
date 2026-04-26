@@ -25,7 +25,7 @@
     <a th:href="@{/}" class="back-link">← Назад к списку</a>
 
     <div class="place-detail">
-        <div class="place-detail-image" th:style="'background-image: url(' + ${place.imageUrl} + ')'"></div>
+        <div class="place-detail-image" th:style="|background-image: url('@{${place.imageUrl}}')|"></div>
 
         <div class="place-detail-content">
             <h1 th:text="${place.name}">Название места</h1>
@@ -83,13 +83,17 @@
                     <span th:text="'(' + ${review.user.email} + ')'">(email)</span>
                 </p>
                 <p class="review-comment" th:text="${review.comment}">Отличный отзыв</p>
-                <img th:if="${review.imageUrl != null and !review.imageUrl.isBlank()}"
-                     th:src="${review.imageUrl}"
-                     alt="Фото к отзыву"
-                     class="review-image review-image-clickable"
-                     loading="lazy"
-                     role="button"
-                     tabindex="0"/>
+                <div class="review-images" th:if="${!#lists.isEmpty(review.allImageUrls)}">
+                    <img th:each="imageUrl, iter : ${review.allImageUrls}"
+                         th:src="@{${imageUrl}}"
+                         th:alt="'Фото к отзыву ' + ${iter.index + 1}"
+                         th:data-review-id="${review.id}"
+                         th:data-image-index="${iter.index}"
+                         class="review-image review-image-clickable"
+                         loading="lazy"
+                         role="button"
+                         tabindex="0"/>
+                </div>
 
                 <div class="review-actions" th:if="${currentUser != null and (review.user.id == currentUser.id or isAdmin)}">
                     <details class="review-edit-box">
@@ -110,12 +114,12 @@
                                 <textarea name="comment" rows="3" required th:text="${review.comment}"></textarea>
                             </div>
                             <div class="form-group">
-                                <label>Новое фото (необязательно)</label>
-                                <input type="file" name="imageFile" accept="image/*">
+                                <label>Новые фото (можно несколько)</label>
+                                <input type="file" name="imageFiles" accept="image/*" multiple>
                             </div>
-                            <label class="checkbox-label" th:if="${review.imageUrl != null and !review.imageUrl.isBlank()}">
+                            <label class="checkbox-label" th:if="${!#lists.isEmpty(review.allImageUrls)}">
                                 <input type="checkbox" name="removeImage" value="true">
-                                <span>Удалить текущее фото</span>
+                                <span>Удалить все текущие фото</span>
                             </label>
                             <button type="submit" class="btn btn-primary btn-save-review">💾 Сохранить изменения</button>
                         </form>
@@ -147,8 +151,8 @@
                     <textarea id="comment" name="comment" rows="4" placeholder="Расскажите о вашем опыте..." required></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="imageFile">Фото к комментарию (необязательно)</label>
-                    <input id="imageFile" type="file" name="imageFile" accept="image/*">
+                    <label for="imageFiles">Фото к комментарию (можно несколько)</label>
+                    <input id="imageFiles" type="file" name="imageFiles" accept="image/*" multiple>
                 </div>
                 <button type="submit" class="btn btn-primary">Отправить отзыв</button>
             </form>
@@ -162,7 +166,10 @@
 
 <div id="review-image-modal" class="image-modal" hidden>
     <button id="review-image-modal-close" type="button" class="image-modal-close" aria-label="Закрыть просмотр фото">✕</button>
+    <button id="review-image-modal-prev" type="button" class="image-modal-nav image-modal-prev" aria-label="Предыдущее фото">‹</button>
     <img id="review-image-modal-img" src="" alt="Фото из отзыва в полном размере" class="image-modal-content">
+    <button id="review-image-modal-next" type="button" class="image-modal-nav image-modal-next" aria-label="Следующее фото">›</button>
+    <div id="review-image-modal-counter" class="image-modal-counter"></div>
 </div>
 
 <footer class="footer">
@@ -193,11 +200,39 @@
     const reviewImageModal = document.getElementById('review-image-modal');
     const reviewImageModalImg = document.getElementById('review-image-modal-img');
     const reviewImageModalClose = document.getElementById('review-image-modal-close');
+    const reviewImageModalPrev = document.getElementById('review-image-modal-prev');
+    const reviewImageModalNext = document.getElementById('review-image-modal-next');
+    const reviewImageModalCounter = document.getElementById('review-image-modal-counter');
     const reviewImages = document.querySelectorAll('.review-image-clickable');
+    const reviewImagesById = new Map();
 
-    function openReviewImageModal(src, alt) {
-        reviewImageModalImg.src = src;
-        reviewImageModalImg.alt = alt || 'Фото из отзыва в полном размере';
+    reviewImages.forEach((img) => {
+        const reviewId = img.dataset.reviewId;
+        if (!reviewImagesById.has(reviewId)) {
+            reviewImagesById.set(reviewId, []);
+        }
+        reviewImagesById.get(reviewId).push(img.src);
+    });
+
+    let currentCarousel = [];
+    let currentCarouselIndex = 0;
+
+    function renderCarouselImage() {
+        if (!currentCarousel.length) {
+            return;
+        }
+        const normalizedIndex = (currentCarouselIndex + currentCarousel.length) % currentCarousel.length;
+        currentCarouselIndex = normalizedIndex;
+        reviewImageModalImg.src = currentCarousel[currentCarouselIndex];
+        reviewImageModalImg.alt = `Фото из отзыва ${currentCarouselIndex + 1}`;
+        reviewImageModalCounter.textContent = `${currentCarouselIndex + 1} / ${currentCarousel.length}`;
+    }
+
+    function openReviewImageModal(src, alt, reviewId, imageIndex) {
+        const carouselImages = reviewImagesById.get(reviewId) || [src];
+        currentCarousel = carouselImages;
+        currentCarouselIndex = Number(imageIndex) || 0;
+        renderCarouselImage();
         reviewImageModal.hidden = false;
         document.body.classList.add('no-scroll');
     }
@@ -205,19 +240,36 @@
     function closeReviewImageModal() {
         reviewImageModal.hidden = true;
         reviewImageModalImg.src = '';
+        reviewImageModalCounter.textContent = '';
+        currentCarousel = [];
+        currentCarouselIndex = 0;
         document.body.classList.remove('no-scroll');
     }
 
+    function showPrevImage() {
+        if (!currentCarousel.length) return;
+        currentCarouselIndex -= 1;
+        renderCarouselImage();
+    }
+
+    function showNextImage() {
+        if (!currentCarousel.length) return;
+        currentCarouselIndex += 1;
+        renderCarouselImage();
+    }
+
     reviewImages.forEach((img) => {
-        img.addEventListener('click', () => openReviewImageModal(img.src, img.alt));
+        img.addEventListener('click', () => openReviewImageModal(img.src, img.alt, img.dataset.reviewId, img.dataset.imageIndex));
         img.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                openReviewImageModal(img.src, img.alt);
+                openReviewImageModal(img.src, img.alt, img.dataset.reviewId, img.dataset.imageIndex);
             }
         });
     });
 
+    reviewImageModalPrev.addEventListener('click', showPrevImage);
+    reviewImageModalNext.addEventListener('click', showNextImage);
     reviewImageModalClose.addEventListener('click', closeReviewImageModal);
     reviewImageModal.addEventListener('click', (event) => {
         if (event.target === reviewImageModal) {
@@ -226,6 +278,17 @@
     });
 
     document.addEventListener('keydown', (event) => {
+        if (reviewImageModal.hidden) {
+            return;
+        }
+        if (event.key === 'ArrowLeft') {
+            showPrevImage();
+            return;
+        }
+        if (event.key === 'ArrowRight') {
+            showNextImage();
+            return;
+        }
         if (event.key === 'Escape' && !reviewImageModal.hidden) {
             closeReviewImageModal();
         }

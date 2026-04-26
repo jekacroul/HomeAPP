@@ -408,6 +408,18 @@ body.home-page {
     border: 1px solid #e5e7eb;
 }
 
+.review-images {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+}
+
+.review-images .review-image {
+    margin-top: 0;
+    height: 150px;
+}
+
 .review-image-clickable {
     cursor: zoom-in;
 }
@@ -459,6 +471,44 @@ body.home-page {
     cursor: pointer;
     background: rgba(255, 255, 255, 0.92);
     color: #111827;
+}
+
+.image-modal-nav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 999px;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.9);
+    color: #111827;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-modal-prev {
+    left: 16px;
+}
+
+.image-modal-next {
+    right: 16px;
+}
+
+.image-modal-counter {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 999px;
+    padding: 8px 14px;
 }
 
 .review-actions {
