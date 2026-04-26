@@ -50,6 +50,9 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         }
 
         Map<String, Object> normalized = new HashMap<>();
+        // Override both env-style and spring.datasource.* keys to be order-safe
+        // against config data property source precedence.
+        normalized.put("DB_URL", jdbcUrl.toString());
         normalized.put("spring.datasource.url", jdbcUrl.toString());
 
         String explicitUser = environment.getProperty("DB_USERNAME");
@@ -60,9 +63,11 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             if (StringUtils.hasText(userInfo)) {
                 String[] parts = userInfo.split(":", 2);
                 if (!StringUtils.hasText(explicitUser) && parts.length > 0) {
+                    normalized.put("DB_USERNAME", parts[0]);
                     normalized.put("spring.datasource.username", parts[0]);
                 }
                 if (!StringUtils.hasText(explicitPassword) && parts.length > 1) {
+                    normalized.put("DB_PASSWORD", parts[1]);
                     normalized.put("spring.datasource.password", parts[1]);
                 }
             }
