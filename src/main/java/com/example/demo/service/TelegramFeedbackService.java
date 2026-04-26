@@ -10,7 +10,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class TelegramFeedbackService {
@@ -20,6 +19,9 @@ public class TelegramFeedbackService {
     @Value("${feedback.telegram.bot-url:}")
     private String botUrl;
 
+    @Value("${feedback.telegram.chat-id:0}")
+    private Long chatId;
+
     public TelegramFeedbackService() {
         this.httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
@@ -27,7 +29,7 @@ public class TelegramFeedbackService {
     }
 
     public boolean isConfigured() {
-        return botUrl != null && !botUrl.isBlank();
+        return botUrl != null && !botUrl.isBlank() && chatId != null && chatId > 0;
     }
 
     public boolean sendFeedback(String name, String email, String message, List<String> screenshotUrls) {
@@ -35,16 +37,11 @@ public class TelegramFeedbackService {
             return false;
         }
 
-        String screenshotsJson = screenshotUrls.stream()
-            .map(this::escapeJson)
-            .map(url -> "\"" + url + "\"")
-            .collect(Collectors.joining(","));
-
+        String description = buildDescription(name, email, message, screenshotUrls);
         String jsonBody = "{"
-            + "\"name\":\"" + escapeJson(name) + "\","
-            + "\"email\":\"" + escapeJson(email) + "\","
-            + "\"message\":\"" + escapeJson(message) + "\","
-            + "\"screenshots\":[" + screenshotsJson + "]"
+            + "\"description\":\"" + escapeJson(description) + "\","
+            + "\"chatId\":" + chatId + ","
+            + "\"completed\":false"
             + "}";
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -63,6 +60,25 @@ public class TelegramFeedbackService {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    private String buildDescription(String name, String email, String message, List<String> screenshotUrls) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Новый отзыв\n");
+        builder.append("Имя: ").append(name == null ? "" : name).append("\n");
+        builder.append("Email: ").append(email == null ? "" : email).append("\n");
+        builder.append("Сообщение: ").append(message == null ? "" : message);
+
+        if (screenshotUrls != null && !screenshotUrls.isEmpty()) {
+            builder.append("\nСкриншоты:\n");
+            for (String url : screenshotUrls) {
+                if (url != null && !url.isBlank()) {
+                    builder.append("- ").append(url).append("\n");
+                }
+            }
+        }
+
+        return builder.toString().trim();
     }
 
     private String escapeJson(String value) {
