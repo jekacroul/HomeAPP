@@ -79,8 +79,8 @@
                     <span class="review-date" th:text="${#temporals.format(review.createdAt, 'dd.MM.yyyy')}">01.01.2024</span>
                 </div>
                 <p class="review-author">
-                    👤 <strong th:text="${review.user.name != null and !review.user.name.isBlank() ? review.user.name : review.user.email}">Имя</strong>
-                    <span th:text="'(' + ${review.user.email} + ')'">(email)</span>
+                    👤 <strong th:text="${review.user.name != null and !review.user.name.isBlank() ? review.user.name : 'Пользователь'}">Имя</strong>
+                    <span sec:authorize="hasRole('ADMIN')" th:text="'(' + ${review.user.email} + ')'">(email)</span>
                 </p>
                 <p class="review-comment" th:text="${review.comment}">Отличный отзыв</p>
                 <div class="review-images" th:if="${!#lists.isEmpty(review.allImageUrls)}">
