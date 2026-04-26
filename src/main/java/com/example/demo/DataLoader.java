@@ -3,8 +3,10 @@ package com.example.demo;
 import com.example.demo.model.User;
 import com.example.demo.repository.PlaceRepository;
 import com.example.demo.repository.UserRepository;
-import org.springframework.boot.CommandLineRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,9 @@ import java.util.List;
 
 @Component
 public class DataLoader implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(DataLoader.class);
+    private static final List<String> LEGACY_PLACE_NAMES = List.of("Coffee & Work", "Coworking Space Hub", "Cafe Relax");
 
     private final PlaceRepository placeRepository;
     private final UserRepository userRepository;
@@ -40,37 +45,64 @@ public class DataLoader implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        log.info("Running startup data loader tasks.");
         ensureUserColumnsExist();
-        placeRepository.deleteByNameIn(List.of("Coffee & Work", "Coworking Space Hub", "Cafe Relax"));
+        cleanupLegacyPlaces();
         createAdminFromSeedIfNeeded();
+        log.info("Startup data loader tasks completed.");
+    }
+
+    private void cleanupLegacyPlaces() {
+        long beforeCleanup = placeRepository.count();
+        placeRepository.deleteByNameIn(LEGACY_PLACE_NAMES);
+        long afterCleanup = placeRepository.count();
+        log.info("Place cleanup completed. Before={}, after={}, deleted={}",
+            beforeCleanup,
+            afterCleanup,
+            Math.max(0, beforeCleanup - afterCleanup));
     }
 
     private void createAdminFromSeedIfNeeded() {
         if (adminSeedEmail == null || adminSeedEmail.isBlank()) {
+            log.info("Admin seed skipped: app.admin.seed.email is empty.");
             return;
-        }
-        if (adminSeedPasswordHash == null || adminSeedPasswordHash.isBlank()) {
-            return;
-        }
-        if (!adminSeedPasswordHash.matches("^\\$2[aby]\\$.{56}$")) {
-            throw new IllegalStateException("app.admin.seed.password-hash must be a BCrypt hash");
         }
 
-        if (userRepository.findByEmail(adminSeedEmail).isEmpty()) {
-            User admin = new User();
-            admin.setEmail(adminSeedEmail);
-            admin.setName(adminSeedName);
-            admin.setPassword(adminSeedPasswordHash);
-            admin.setRole(User.Role.ADMIN);
-            admin.setBanned(false);
-            userRepository.save(admin);
+        if (adminSeedPasswordHash == null || adminSeedPasswordHash.isBlank()) {
+            log.warn("Admin seed skipped: app.admin.seed.password-hash is empty.");
+            return;
+        }
+
+        validateSeedPasswordHash();
+
+        if (userRepository.findByEmail(adminSeedEmail).isPresent()) {
+            log.info("Admin seed skipped: user with email={} already exists.", adminSeedEmail);
+            return;
+        }
+
+        User admin = new User();
+        admin.setEmail(adminSeedEmail);
+        admin.setName(adminSeedName);
+        admin.setPassword(adminSeedPasswordHash);
+        admin.setRole(User.Role.ADMIN);
+        admin.setBanned(false);
+        userRepository.save(admin);
+
+        log.info("Seed admin created for email={}", adminSeedEmail);
+    }
+
+    private void validateSeedPasswordHash() {
+        if (!adminSeedPasswordHash.matches("^\\$2[aby]\\$.{56}$")) {
+            throw new IllegalStateException("app.admin.seed.password-hash must be a BCrypt hash");
         }
     }
 
     private void ensureUserColumnsExist() {
+        log.info("Ensuring user service columns exist.");
         jdbcTemplate.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20)");
         jdbcTemplate.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS banned BOOLEAN");
         jdbcTemplate.execute("UPDATE users SET role = 'USER' WHERE role IS NULL");
         jdbcTemplate.execute("UPDATE users SET banned = FALSE WHERE banned IS NULL");
+        log.info("User service columns are ready.");
     }
 }
