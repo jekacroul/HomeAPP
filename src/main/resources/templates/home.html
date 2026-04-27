@@ -33,38 +33,38 @@
 </header>
 
 <main class="container home-main home-layout-main">
-    <section class="filters home-filters">
-        <div class="home-filter-pills" role="group" aria-label="Фильтры">
-            <button type="button" class="filter-pill is-active" data-filter="wifi" aria-pressed="true">
-                <span class="filter-pill-icon">📶</span>
-                <span>Wi-Fi</span>
-            </button>
-            <button type="button" class="filter-pill is-active" data-filter="sockets" aria-pressed="true">
-                <span class="filter-pill-icon">🔌</span>
-                <span>Розетки</span>
-            </button>
-            <button type="button" class="filter-pill" data-filter="quiet" aria-pressed="false">
-                <span class="filter-pill-icon">🔇</span>
-                <span>Тихо</span>
-            </button>
-            <button type="button" class="filter-pill" data-filter="longstay" aria-pressed="false">
-                <span class="filter-pill-icon">⏰</span>
-                <span>Можно надолго</span>
-            </button>
-        </div>
-
-        <div class="map-search-wrapper map-search-wrapper-inline">
-            <label for="place-search" class="map-search-label">Поиск по названию или району</label>
-            <input type="search"
-                   id="place-search"
-                   class="map-search-input"
-                   placeholder="Поиск по названию или району"
-                   autocomplete="off">
-        </div>
-    </section>
-
     <section class="home-content-grid">
         <div class="home-list-panel">
+            <div class="home-left-controls">
+                <div class="map-search-wrapper map-search-wrapper-inline">
+                    <label for="place-search" class="map-search-label">Поиск по названию или району</label>
+                    <input type="search"
+                           id="place-search"
+                           class="map-search-input"
+                           placeholder="Поиск по названию или району"
+                           autocomplete="off">
+                </div>
+
+                <div class="home-filter-pills" role="group" aria-label="Фильтры">
+                    <button type="button" class="filter-pill is-active" data-filter="wifi" aria-pressed="true">
+                        <span class="filter-pill-icon">📶</span>
+                        <span>Wi-Fi</span>
+                    </button>
+                    <button type="button" class="filter-pill is-active" data-filter="sockets" aria-pressed="true">
+                        <span class="filter-pill-icon">🔌</span>
+                        <span>Розетки</span>
+                    </button>
+                    <button type="button" class="filter-pill" data-filter="quiet" aria-pressed="false">
+                        <span class="filter-pill-icon">🔇</span>
+                        <span>Тихо</span>
+                    </button>
+                    <button type="button" class="filter-pill" data-filter="longstay" aria-pressed="false">
+                        <span class="filter-pill-icon">⏰</span>
+                        <span>Можно надолго</span>
+                    </button>
+                </div>
+            </div>
+
             <div class="home-list-toolbar">
                 <h2>Найдено <span id="results-count" th:text="${#lists.size(places)}">0</span> места</h2>
                 <label class="home-sort">

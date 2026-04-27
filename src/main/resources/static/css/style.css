@@ -1955,3 +1955,41 @@ body.home-page .home-map {
     line-height: inherit;
     color: inherit;
 }
+
+/* Move search over filters on left and remove right-top gap */
+body.home-page .home-layout-main {
+    display: block;
+    height: calc(100vh - 86px - 74px);
+}
+
+body.home-page .home-content-grid {
+    height: 100%;
+    min-height: 0;
+}
+
+.home-left-controls {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.home-left-controls .map-search-wrapper-inline,
+.home-left-controls .home-filter-pills {
+    width: 100%;
+}
+
+body.home-page .home-map-panel {
+    align-self: stretch;
+    height: 100%;
+}
+
+@media (max-width: 1360px) {
+    body.home-page .home-layout-main {
+        display: block;
+        height: auto;
+    }
+
+    .home-left-controls {
+        margin-bottom: 10px;
+    }
+}
