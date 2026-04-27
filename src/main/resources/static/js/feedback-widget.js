@@ -34,7 +34,11 @@
             </div>
         `;
 
-        const footerLinks = document.querySelector('.home-footer-links, .footer .container, .footer');
+        const footerLinks = document.querySelector('.home-footer-links')
+            || document.querySelector('.footer-links')
+            || document.querySelector('.footer .container')
+            || document.querySelector('.footer');
+
         if (footerLinks) {
             footerLinks.appendChild(wrapper);
         } else {

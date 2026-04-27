@@ -1943,3 +1943,15 @@ body.home-page .home-map {
         grid-template-columns: 1fr;
     }
 }
+
+/* Keep feedback link aligned with other footer links */
+.home-footer-links .feedback-widget-inline {
+    display: inline-flex;
+    align-items: center;
+}
+
+.home-footer-links .feedback-toggle-text {
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+}
