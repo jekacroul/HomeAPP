@@ -1235,3 +1235,161 @@ body.home-page {
         flex-wrap: wrap;
     }
 }
+
+/* Global light design for all pages */
+body {
+    background: #f5f6fa;
+    color: #111827;
+}
+
+.navbar {
+    background: rgba(255, 255, 255, 0.97);
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 3px 14px rgba(15, 23, 42, 0.08);
+}
+
+.logo {
+    color: #111827;
+}
+
+.btn {
+    border-radius: 12px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #6d43ff, #8a5bff);
+    box-shadow: 0 8px 22px rgba(109, 67, 255, 0.3);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.btn-outline {
+    border: 1px solid #cbd5e1;
+    color: #334155;
+}
+
+.btn-outline:hover {
+    background: #eef2ff;
+    color: #4338ca;
+    border-color: #c7d2fe;
+}
+
+.page-content {
+    padding-top: 30px;
+    padding-bottom: 30px;
+}
+
+.back-link {
+    color: #6366f1;
+}
+
+.form-container,
+.place-detail,
+.reviews-section,
+.admin-section,
+.auth-card {
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.form-container,
+.auth-card {
+    border-radius: 18px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #6d43ff;
+    box-shadow: 0 0 0 3px rgba(109, 67, 255, 0.15);
+}
+
+.footer {
+    background: #f9fafb;
+    color: #6b7280;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Add place page redesign */
+.add-place-page {
+    display: grid;
+    gap: 16px;
+}
+
+.card-surface {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+    padding: 20px;
+}
+
+.add-place-header h1 {
+    font-size: clamp(2rem, 3vw, 2.7rem);
+    margin-bottom: 10px;
+}
+
+.add-place-header p {
+    color: #6b7280;
+    font-size: 1.05rem;
+}
+
+.add-place-form {
+    display: grid;
+    gap: 16px;
+}
+
+.add-place-block h2 {
+    margin-bottom: 18px;
+    font-size: 1.3rem;
+}
+
+.form-grid-two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.place-map {
+    height: 420px;
+    border-radius: 14px;
+}
+
+.geo-results {
+    border-radius: 12px;
+}
+
+.auth-page {
+    background: linear-gradient(180deg, #f5f6fa 0%, #eef2ff 100%);
+}
+
+.auth-card {
+    box-shadow: 0 16px 35px rgba(15, 23, 42, 0.1);
+}
+
+.admin-table th {
+    background: #f8fafc;
+    font-weight: 700;
+}
+
+.admin-table td,
+.admin-table th {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+@media (max-width: 900px) {
+    .form-grid-two {
+        grid-template-columns: 1fr;
+    }
+}
