@@ -6,7 +6,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.PlaceRepository;
 import com.example.demo.repository.ReviewRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.GeoapifyService;
+import com.example.demo.service.PlaceLookupService;
 import com.example.demo.service.TelegramFeedbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,7 +40,7 @@ public class HomeController {
     private UserRepository userRepository;
 
     @Autowired
-    private GeoapifyService geoapifyService;
+    private PlaceLookupService placeLookupService;
 
     @Autowired
     private TelegramFeedbackService telegramFeedbackService;
@@ -179,11 +179,11 @@ public class HomeController {
 
     @GetMapping(value = "/api/minsk-places", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public List<GeoapifyService.GeoPlaceSuggestion> searchPlaces(
+    public List<PlaceLookupService.GeoPlaceSuggestion> searchPlaces(
         @RequestParam(value = "query", required = false) String query,
         @RequestParam(value = "bbox", required = false) String bbox
     ) {
-        return geoapifyService.searchInMinsk(query, 50, bbox);
+        return placeLookupService.searchInMinsk(query, 50, bbox);
     }
 
     @GetMapping(value = "/api/place-image", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -192,7 +192,7 @@ public class HomeController {
         @RequestParam(value = "name", required = false) String name,
         @RequestParam(value = "address", required = false) String address
     ) {
-        return geoapifyService.lookupPlaceImage(name, address)
+        return placeLookupService.lookupPlaceImage(name, address)
             .map(url -> Map.of("imageUrl", url))
             .orElseGet(() -> Map.of("imageUrl", ""));
     }
