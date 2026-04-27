@@ -64,9 +64,6 @@
                     <span>Поиск по карте</span>
                 </label>
             </div>
-            <div class="filter-group">
-                <button type="button" class="btn btn-outline btn-small" id="show-all-city">Весь город и все заведения</button>
-            </div>
         </section>
 
         <section class="map-section">
@@ -120,21 +117,9 @@
 
         const cards = Array.from(document.querySelectorAll('.place-card'));
         const mapSearchInput = document.getElementById('filter-map-search');
-        const showAllCityButton = document.getElementById('show-all-city');
 
         document.querySelectorAll('.filter-group input').forEach(input => {
             input.addEventListener('change', filterPlaces);
-        });
-
-        showAllCityButton.addEventListener('click', () => {
-            mapSearchInput.checked = false;
-            currentBounds = null;
-
-            if (homeMap) {
-                homeMap.setBounds(minskBounds, {checkZoomRange: true, duration: 250});
-            }
-
-            filterPlaces();
         });
 
         function isInCurrentBounds(card) {

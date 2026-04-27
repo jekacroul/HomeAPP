@@ -190,11 +190,6 @@ body.home-page {
     accent-color: #667eea;
 }
 
-.btn-small {
-    padding: 8px 12px;
-    font-size: 0.9rem;
-}
-
 .map-section {
     background: white;
     padding: 16px;
@@ -701,6 +696,12 @@ body.home-page {
     right: 0;
     bottom: 0;
     z-index: 900;
+    padding: 12px 20px;
+}
+
+.footer-fixed p {
+    margin: 0;
+    font-size: 0.9rem;
 }
 
 /* Responsive */
