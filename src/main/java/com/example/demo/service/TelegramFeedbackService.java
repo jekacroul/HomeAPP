@@ -10,11 +10,13 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class TelegramFeedbackService {
 
     private final HttpClient httpClient;
+    private final AtomicLong feedbackSequence = new AtomicLong(1);
 
     @Value("${feedback.telegram.bot-url:}")
     private String botUrl;
@@ -38,7 +40,10 @@ public class TelegramFeedbackService {
         }
 
         String description = buildDescription(name, email, message, screenshotUrls);
+        long feedbackNumber = feedbackSequence.getAndIncrement();
         String jsonBody = "{"
+            + "\"id\":" + feedbackNumber + ","
+            + "\"number\":" + feedbackNumber + ","
             + "\"description\":\"" + escapeJson(description) + "\","
             + "\"chatId\":" + chatId + ","
             + "\"completed\":false"
