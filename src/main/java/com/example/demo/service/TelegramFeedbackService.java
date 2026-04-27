@@ -1,7 +1,12 @@
 package com.example.demo.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -14,7 +19,10 @@ import java.util.List;
 @Service
 public class TelegramFeedbackService {
 
+    private static final Logger log = LoggerFactory.getLogger(TelegramFeedbackService.class);
+
     private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
 
     @Value("${feedback.telegram.bot-url:}")
     private String botUrl;
@@ -26,6 +34,7 @@ public class TelegramFeedbackService {
         this.httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .build();
+        this.objectMapper = new ObjectMapper();
     }
 
     public boolean isConfigured() {
@@ -38,26 +47,34 @@ public class TelegramFeedbackService {
         }
 
         String description = buildDescription(name, email, message, screenshotUrls);
-        String jsonBody = "{"
-            + "\"description\":\"" + escapeJson(description) + "\","
-            + "\"chatId\":" + chatId + ","
-            + "\"completed\":false"
-            + "}";
+        String jsonBody;
+        try {
+            jsonBody = objectMapper.writeValueAsString(new FeedbackTaskPayload(description, chatId, false));
+        } catch (JsonProcessingException e) {
+            log.warn("Не удалось сериализовать payload для Telegram feedback", e);
+            return false;
+        }
 
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(botUrl))
             .timeout(Duration.ofSeconds(15))
-            .header("Content-Type", "application/json")
+            .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            .header("Accept", MediaType.APPLICATION_JSON_VALUE)
             .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
             .build();
 
         try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            return response.statusCode() >= 200 && response.statusCode() < 300;
+            boolean success = response.statusCode() >= 200 && response.statusCode() < 300;
+            if (!success) {
+                log.warn("Telegram feedback API вернул ошибку: status={}, body={}", response.statusCode(), response.body());
+            }
+            return success;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;
         } catch (IOException e) {
+            log.warn("Ошибка при отправке feedback в Telegram API", e);
             return false;
         }
     }
@@ -81,15 +98,9 @@ public class TelegramFeedbackService {
         return builder.toString().trim();
     }
 
-    private String escapeJson(String value) {
-        if (value == null) {
-            return "";
+    private record FeedbackTaskPayload(String description, Long chatId, boolean completed) {
+        public Long chat_id() {
+            return chatId;
         }
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t");
     }
 }
