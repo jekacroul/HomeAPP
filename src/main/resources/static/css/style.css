@@ -2077,12 +2077,16 @@ body.home-page .home-map-panel {
 }
 
 /* Home page layout fix: map from top-right + non-overlapping footer */
+:root {
+    --home-block-gap: 10px;
+}
+
 body.home-page .home-layout-main {
     display: block;
     height: auto;
     min-height: 0;
-    padding-top: 10px;
-    padding-bottom: 12px;
+    padding-top: var(--home-block-gap);
+    padding-bottom: var(--home-block-gap);
 }
 
 body.home-page .home-content-grid {
@@ -2111,10 +2115,10 @@ body.home-page .home-list-panel {
 
 body.home-page .home-map-panel {
     position: sticky;
-    top: 64px;
-    height: calc(100vh - 132px);
+    top: calc(64px + var(--home-block-gap));
+    height: calc(100vh - 132px - (var(--home-block-gap) * 2));
     min-height: 540px;
-    margin-bottom: 18px;
+    margin-bottom: var(--home-block-gap);
     overflow: visible;
     padding: 0;
 }
@@ -2122,6 +2126,10 @@ body.home-page .home-map-panel {
 body.home-page .home-map {
     height: 100%;
     min-height: 540px;
+}
+
+body.home-page .home-footer {
+    margin-top: var(--home-block-gap);
 }
 
 .home-project-intro {
