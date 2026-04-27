@@ -58,10 +58,25 @@
                     <span>Можно надолго</span>
                 </label>
             </div>
+            <div class="filter-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="filter-map-search">
+                    <span>Поиск по карте</span>
+                </label>
+            </div>
+            <div class="filter-group">
+                <button type="button" class="btn btn-outline btn-small" id="show-all-city">Весь город и все заведения</button>
+            </div>
         </section>
 
-        <section class="places-grid">
-            <div class="place-card" th:each="place : ${places}" 
+        <section class="map-section">
+            <div id="home-map" class="home-map"></div>
+            <p class="map-hint">Включите «Поиск по карте», приблизьте район — список справа/ниже обновится по текущей области.</p>
+        </section>
+
+        <section class="places-grid" id="places-grid">
+            <div class="place-card" th:each="place : ${places}"
+                 th:attr="data-latitude=${place.latitude},data-longitude=${place.longitude}"
                  th:classappend="${place.noiseLevel.name() == 'QUIET'} ? 'quiet' : (${place.noiseLevel.name() == 'NOISY'} ? 'noisy' : '')">
                 <div class="place-image" th:style="|background-image: url('@{${place.imageUrl}}')|"></div>
                 <div class="place-content">
@@ -93,28 +108,119 @@
         </div>
     </footer>
 
+    <script th:src="${mapApiUrl}" type="text/javascript"></script>
     <script>
+        const minskBounds = [
+            [53.79, 27.30],
+            [53.98, 27.77]
+        ];
+
+        let homeMap;
+        let currentBounds = null;
+
+        const cards = Array.from(document.querySelectorAll('.place-card'));
+        const mapSearchInput = document.getElementById('filter-map-search');
+        const showAllCityButton = document.getElementById('show-all-city');
+
         document.querySelectorAll('.filter-group input').forEach(input => {
             input.addEventListener('change', filterPlaces);
         });
+
+        showAllCityButton.addEventListener('click', () => {
+            mapSearchInput.checked = false;
+            currentBounds = null;
+
+            if (homeMap) {
+                homeMap.setBounds(minskBounds, {checkZoomRange: true, duration: 250});
+            }
+
+            filterPlaces();
+        });
+
+        function isInCurrentBounds(card) {
+            if (!currentBounds) {
+                return true;
+            }
+
+            const lat = Number(card.dataset.latitude);
+            const lon = Number(card.dataset.longitude);
+
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                return false;
+            }
+
+            const southWest = currentBounds[0];
+            const northEast = currentBounds[1];
+
+            const isWithinLatitude = lat >= southWest[0] && lat <= northEast[0];
+            const isWithinLongitude = lon >= southWest[1] && lon <= northEast[1];
+
+            return isWithinLatitude && isWithinLongitude;
+        }
 
         function filterPlaces() {
             const wifi = document.getElementById('filter-wifi').checked;
             const sockets = document.getElementById('filter-sockets').checked;
             const quiet = document.getElementById('filter-quiet').checked;
             const longstay = document.getElementById('filter-longstay').checked;
+            const mapSearchEnabled = mapSearchInput.checked;
 
-            document.querySelectorAll('.place-card').forEach(card => {
+            cards.forEach(card => {
                 let show = true;
-                
+
                 if (wifi && !card.querySelector('[title*="Wi-Fi"]')) show = false;
                 if (sockets && !card.textContent.includes('розеток')) show = false;
                 if (quiet && !card.classList.contains('quiet')) show = false;
                 if (longstay && !card.textContent.includes('Можно надолго')) show = false;
-                
+                if (mapSearchEnabled && !isInCurrentBounds(card)) show = false;
+
                 card.style.display = show ? 'block' : 'none';
             });
         }
+
+        ymaps.ready(() => {
+            homeMap = new ymaps.Map('home-map', {
+                center: [53.9023, 27.5619],
+                zoom: 11,
+                controls: ['zoomControl', 'typeSelector', 'fullscreenControl']
+            });
+
+            homeMap.setBounds(minskBounds, {checkZoomRange: true});
+
+            cards.forEach(card => {
+                const lat = Number(card.dataset.latitude);
+                const lon = Number(card.dataset.longitude);
+                const placeName = card.querySelector('h3')?.textContent?.trim() || 'Заведение';
+
+                if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                    return;
+                }
+
+                const placemark = new ymaps.Placemark([lat, lon], {
+                    balloonContent: placeName
+                }, {
+                    preset: 'islands#redDotIcon'
+                });
+
+                homeMap.geoObjects.add(placemark);
+            });
+
+            homeMap.events.add('boundschange', (event) => {
+                if (!mapSearchInput.checked) {
+                    return;
+                }
+
+                currentBounds = event.get('newBounds');
+                filterPlaces();
+            });
+
+            mapSearchInput.addEventListener('change', () => {
+                currentBounds = mapSearchInput.checked ? homeMap.getBounds() : null;
+                filterPlaces();
+            });
+
+            filterPlaces();
+        });
     </script>
 <script defer th:src="@{/js/feedback-widget.js}"></script>
 </body>
