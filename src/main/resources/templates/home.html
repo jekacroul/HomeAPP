@@ -58,10 +58,28 @@
                     <span>Можно надолго</span>
                 </label>
             </div>
+            <div class="filter-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="filter-map-search">
+                    <span>Поиск по карте</span>
+                </label>
+            </div>
         </section>
 
-        <section class="places-grid">
-            <div class="place-card" th:each="place : ${places}" 
+        <section class="map-section">
+            <div class="place-search-wrap">
+                <label for="place-search" class="place-search-label">Поиск заведений</label>
+                <div class="place-search-input-wrap">
+                    <input type="search" id="place-search" class="place-search-input" placeholder="Например: Surf Coffee, Немига, коворкинг...">
+                </div>
+            </div>
+            <div id="home-map" class="home-map"></div>
+            <p class="map-hint">Включите «Поиск по карте», приблизьте район — список справа/ниже обновится по текущей области.</p>
+        </section>
+
+        <section class="places-grid" id="places-grid">
+            <div class="place-card" th:each="place : ${places}"
+                 th:attr="data-latitude=${place.latitude},data-longitude=${place.longitude}"
                  th:classappend="${place.noiseLevel.name() == 'QUIET'} ? 'quiet' : (${place.noiseLevel.name() == 'NOISY'} ? 'noisy' : '')">
                 <div class="place-image" th:style="|background-image: url('@{${place.imageUrl}}')|"></div>
                 <div class="place-content">
@@ -93,28 +111,136 @@
         </div>
     </footer>
 
+    <script th:src="${mapApiUrl}" type="text/javascript"></script>
     <script>
+        // Technical note: map/list filtering is intentionally kept on the client side for fast UX.
+        const minskBounds = [
+            [53.79, 27.30],
+            [53.98, 27.77]
+        ];
+
+        let homeMap;
+        let currentBounds = null;
+        const placeItems = Array.from(document.querySelectorAll('.place-card')).map((card) => {
+            const title = card.querySelector('h3')?.textContent?.trim() || '';
+            const address = card.querySelector('.address')?.textContent?.trim() || '';
+            const latitude = Number(card.dataset.latitude);
+            const longitude = Number(card.dataset.longitude);
+            return {
+                card,
+                title,
+                address,
+                latitude,
+                longitude,
+                placemark: null
+            };
+        });
+        const mapSearchInput = document.getElementById('filter-map-search');
+        const placeSearchInput = document.getElementById('place-search');
+
         document.querySelectorAll('.filter-group input').forEach(input => {
             input.addEventListener('change', filterPlaces);
         });
+        placeSearchInput.addEventListener('input', filterPlaces);
+
+        function isInCurrentBounds(placeItem) {
+            if (!currentBounds) {
+                return true;
+            }
+            const lat = placeItem.latitude;
+            const lon = placeItem.longitude;
+
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                return false;
+            }
+
+            const southWest = currentBounds[0];
+            const northEast = currentBounds[1];
+
+            const isWithinLatitude = lat >= southWest[0] && lat <= northEast[0];
+            const isWithinLongitude = lon >= southWest[1] && lon <= northEast[1];
+
+            return isWithinLatitude && isWithinLongitude;
+        }
+
+        function matchesText(placeItem, query) {
+            if (!query) {
+                return true;
+            }
+            const haystack = `${placeItem.title} ${placeItem.address}`.toLowerCase();
+            return haystack.includes(query);
+        }
 
         function filterPlaces() {
             const wifi = document.getElementById('filter-wifi').checked;
             const sockets = document.getElementById('filter-sockets').checked;
             const quiet = document.getElementById('filter-quiet').checked;
             const longstay = document.getElementById('filter-longstay').checked;
+            const mapSearchEnabled = mapSearchInput.checked;
+            const query = placeSearchInput.value.trim().toLowerCase();
 
-            document.querySelectorAll('.place-card').forEach(card => {
+            placeItems.forEach(placeItem => {
+                const card = placeItem.card;
                 let show = true;
-                
+
                 if (wifi && !card.querySelector('[title*="Wi-Fi"]')) show = false;
                 if (sockets && !card.textContent.includes('розеток')) show = false;
                 if (quiet && !card.classList.contains('quiet')) show = false;
                 if (longstay && !card.textContent.includes('Можно надолго')) show = false;
-                
+                if (!matchesText(placeItem, query)) show = false;
+                if (mapSearchEnabled && !isInCurrentBounds(placeItem)) show = false;
+
                 card.style.display = show ? 'block' : 'none';
+                if (placeItem.placemark) {
+                    placeItem.placemark.options.set('visible', show);
+                }
             });
         }
+
+        ymaps.ready(() => {
+            homeMap = new ymaps.Map('home-map', {
+                center: [53.9023, 27.5619],
+                zoom: 11,
+                controls: ['zoomControl', 'typeSelector', 'fullscreenControl']
+            });
+
+            homeMap.setBounds(minskBounds, {checkZoomRange: true});
+
+            placeItems.forEach(placeItem => {
+                const lat = placeItem.latitude;
+                const lon = placeItem.longitude;
+                const placeName = placeItem.title || 'Заведение';
+
+                if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                    return;
+                }
+
+                const placemark = new ymaps.Placemark([lat, lon], {
+                    balloonContent: placeName
+                }, {
+                    preset: 'islands#redDotIcon'
+                });
+
+                homeMap.geoObjects.add(placemark);
+                placeItem.placemark = placemark;
+            });
+
+            homeMap.events.add('boundschange', (event) => {
+                if (!mapSearchInput.checked) {
+                    return;
+                }
+
+                currentBounds = event.get('newBounds');
+                filterPlaces();
+            });
+
+            mapSearchInput.addEventListener('change', () => {
+                currentBounds = mapSearchInput.checked ? homeMap.getBounds() : null;
+                filterPlaces();
+            });
+
+            filterPlaces();
+        });
     </script>
 <script defer th:src="@{/js/feedback-widget.js}"></script>
 </body>
