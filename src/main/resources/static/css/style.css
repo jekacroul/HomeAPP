@@ -951,3 +951,287 @@ body.home-page {
     font-size: 0.88rem;
     color: #334155;
 }
+
+/* Home page redesign */
+body.home-page {
+    background: #f5f6fa;
+    color: #111827;
+}
+
+.home-page .navbar {
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 2px 12px rgba(17, 24, 39, 0.06);
+}
+
+.home-nav-content {
+    min-height: 86px;
+}
+
+.home-logo {
+    color: #111827;
+    font-size: 2rem;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.home-logo span {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.home-nav-links .btn-primary {
+    background: linear-gradient(135deg, #6d43ff, #8a5bff);
+    box-shadow: 0 8px 20px rgba(109, 67, 255, 0.25);
+}
+
+.home-hero {
+    text-align: left;
+    color: #0f172a;
+    padding: 52px 20px 26px;
+}
+
+.home-hero h1 {
+    font-size: clamp(2.1rem, 4vw, 4rem);
+    line-height: 1.1;
+    margin-bottom: 16px;
+}
+
+.home-hero p {
+    color: #6b7280;
+    max-width: 940px;
+    font-size: clamp(1.05rem, 2vw, 1.95rem);
+}
+
+.home-layout-main {
+    padding-bottom: 28px;
+}
+
+.home-filters {
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    margin: 18px 0 24px;
+    gap: 10px;
+    align-items: center;
+}
+
+.home-filters .filter-group {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 10px 14px;
+    background: #fff;
+}
+
+.home-filters .filter-group:first-child {
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+}
+
+.home-filters .checkbox-label {
+    gap: 10px;
+    font-weight: 500;
+    color: #111827;
+}
+
+.filter-map-group {
+    flex: 1 1 310px;
+}
+
+.home-filters .map-search-wrapper {
+    margin-bottom: 0;
+    flex: 1 1 280px;
+}
+
+.home-filters .map-search-label {
+    display: none;
+}
+
+.home-filters .map-search-input {
+    height: 100%;
+    min-height: 48px;
+    border-radius: 12px;
+}
+
+.home-search-btn {
+    padding: 12px 28px;
+    border-radius: 12px;
+}
+
+.home-content-grid {
+    display: grid;
+    grid-template-columns: 40% 1fr;
+    gap: 16px;
+    align-items: start;
+}
+
+.home-list-panel,
+.home-map-panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+}
+
+.home-list-panel {
+    padding: 14px;
+}
+
+.home-list-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.home-list-toolbar h2 {
+    font-size: 1.15rem;
+}
+
+.home-sort select {
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font: inherit;
+}
+
+.places-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.home-page .place-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: none;
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    overflow: hidden;
+}
+
+.home-page .place-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 16px rgba(15, 23, 42, 0.08);
+}
+
+.home-page .place-image {
+    height: 100%;
+    min-height: 140px;
+}
+
+.home-page .place-content {
+    padding: 14px;
+}
+
+.home-page .place-header h3 {
+    font-size: 1.45rem;
+}
+
+.home-page .amenity {
+    border-radius: 999px;
+    background: #f3f4f6;
+}
+
+.home-more-btn {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+}
+
+.home-map-panel {
+    margin-bottom: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.home-map {
+    height: 720px;
+    border: none;
+    border-radius: 0;
+}
+
+.home-map-panel .map-hint {
+    margin: 0;
+    padding: 12px 16px;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+.home-footer {
+    background: #f9fafb;
+    color: #6b7280;
+    border-top: 1px solid #e5e7eb;
+    padding: 18px 0;
+    margin-top: 28px;
+}
+
+.home-footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.home-footer-links {
+    display: flex;
+    gap: 20px;
+}
+
+.home-footer-links a {
+    color: #6b7280;
+    text-decoration: none;
+}
+
+.home-footer-links a:hover {
+    color: #111827;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+@media (max-width: 1024px) {
+    .home-content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .home-map {
+        height: 420px;
+    }
+}
+
+@media (max-width: 768px) {
+    .home-logo,
+    .home-logo span {
+        font-size: 1.4rem;
+    }
+
+    .home-page .place-card {
+        grid-template-columns: 1fr;
+    }
+
+    .home-page .place-image {
+        min-height: 180px;
+    }
+
+    .home-footer-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .home-footer-links {
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+}

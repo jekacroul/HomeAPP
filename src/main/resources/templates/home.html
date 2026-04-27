@@ -8,243 +8,277 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="home-page" th:attr="data-feedback-endpoint=@{/feedback}">
-    <nav class="navbar">
-        <div class="container nav-content">
-            <a th:href="@{/}" class="logo">📍 Где работать</a>
-            <div class="nav-links">
-                <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="btn btn-secondary">Админ-панель</a>
-                <a sec:authorize="isAuthenticated()" th:href="@{/add-place}" class="btn btn-primary">+ Добавить место</a>
-                <span sec:authorize="isAuthenticated()" class="user-info">
+<nav class="navbar">
+    <div class="container nav-content home-nav-content">
+        <a th:href="@{/}" class="logo home-logo">📍 <span>Где работать</span></a>
+        <div class="nav-links home-nav-links">
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="btn btn-secondary">Админ-панель</a>
+            <a sec:authorize="isAuthenticated()" th:href="@{/add-place}" class="btn btn-primary">+ Добавить место</a>
+            <span sec:authorize="isAuthenticated()" class="user-info">
                     Привет, <span sec:authentication="principal.displayName"></span>
                 </span>
-                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="logout-form">
-                    <button type="submit" class="btn btn-outline">Выйти</button>
-                </form>
-                <a sec:authorize="!isAuthenticated()" th:href="@{/login}" class="btn btn-outline">Войти</a>
-            </div>
+            <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit" class="btn btn-outline">Выйти</button>
+            </form>
+            <a sec:authorize="!isAuthenticated()" th:href="@{/login}" class="btn btn-primary">Войти</a>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <header class="hero">
-        <div class="container">
-            <h1>Найди идеальное место для работы</h1>
-            <p>Кафе, коворкинги и другие пространства с Wi-Fi, розетками и комфортной атмосферой</p>
+<header class="hero home-hero">
+    <div class="container">
+        <h1>Найди идеальное место для работы</h1>
+        <p>Кафе, коворкинги и другие пространства с Wi-Fi, розетками и комфортной атмосферой</p>
+    </div>
+</header>
+
+<main class="container home-main home-layout-main">
+    <section class="filters home-filters">
+        <div class="filter-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="filter-wifi" checked>
+                <span>Wi-Fi</span>
+            </label>
         </div>
-    </header>
+        <div class="filter-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="filter-sockets" checked>
+                <span>Розетки</span>
+            </label>
+        </div>
+        <div class="filter-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="filter-quiet">
+                <span>Тихо</span>
+            </label>
+        </div>
+        <div class="filter-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="filter-longstay">
+                <span>Можно надолго</span>
+            </label>
+        </div>
+        <div class="filter-group filter-map-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="filter-map-search">
+                <span>Обновлять результаты при движении карты</span>
+            </label>
+        </div>
+        <div class="map-search-wrapper">
+            <label for="place-search" class="map-search-label">Поиск по названию или району</label>
+            <input type="search"
+                   id="place-search"
+                   class="map-search-input"
+                   placeholder="Поиск по названию или району"
+                   autocomplete="off">
+        </div>
+        <button class="btn btn-primary home-search-btn" type="button" onclick="filterPlaces()">Найти</button>
+    </section>
 
-    <main class="container home-main">
-        <section class="filters">
-            <div class="filter-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="filter-wifi" checked>
-                    <span>Wi-Fi</span>
+    <section class="home-content-grid">
+        <div class="home-list-panel">
+            <div class="home-list-toolbar">
+                <h2>Найдено <span id="results-count" th:text="${#lists.size(places)}">0</span> места</h2>
+                <label class="home-sort">
+                    <span class="sr-only">Сортировка</span>
+                    <select aria-label="Сортировка списка">
+                        <option>Сначала популярные</option>
+                        <option>Сначала ближайшие</option>
+                    </select>
                 </label>
             </div>
-            <div class="filter-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="filter-sockets" checked>
-                    <span>Розетки</span>
-                </label>
-            </div>
-            <div class="filter-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="filter-quiet">
-                    <span>Тихо</span>
-                </label>
-            </div>
-            <div class="filter-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="filter-longstay">
-                    <span>Можно надолго</span>
-                </label>
-            </div>
-            <div class="filter-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="filter-map-search">
-                    <span>Поиск по карте</span>
-                </label>
-            </div>
-        </section>
 
-        <section class="map-section">
-            <div class="map-search-wrapper">
-                <label for="place-search" class="map-search-label">Поиск по заведениям</label>
-                <input type="search"
-                       id="place-search"
-                       class="map-search-input"
-                       placeholder="Например: кофейня, коворкинг, центр"
-                       autocomplete="off">
-            </div>
-            <div id="home-map" class="home-map"></div>
-            <p class="map-hint">Включите «Поиск по карте», приблизьте район — список справа/ниже обновится по текущей области.</p>
-        </section>
-
-        <section class="places-grid" id="places-grid">
-            <div class="place-card" th:each="place : ${places}"
-                 th:attr="data-latitude=${place.latitude},data-longitude=${place.longitude}"
-                 th:classappend="${place.noiseLevel.name() == 'QUIET'} ? 'quiet' : (${place.noiseLevel.name() == 'NOISY'} ? 'noisy' : '')">
-                <div class="place-image" th:style="|background-image: url('@{${place.imageUrl}}')|"></div>
-                <div class="place-content">
-                    <div class="place-header">
-                        <h3 th:text="${place.name}">Название места</h3>
-                        <div class="rating" th:if="${place.rating > 0}">
-                            ⭐ <span th:text="${#numbers.formatDecimal(place.rating, 1, 1)}">4.5</span>
+            <section class="places-grid" id="places-grid">
+                <article class="place-card" th:each="place : ${places}"
+                         th:attr="data-latitude=${place.latitude},data-longitude=${place.longitude}"
+                         th:classappend="${place.noiseLevel.name() == 'QUIET'} ? 'quiet' : (${place.noiseLevel.name() == 'NOISY'} ? 'noisy' : '')">
+                    <div class="place-image" th:style="|background-image: url('@{${place.imageUrl}}')|"></div>
+                    <div class="place-content">
+                        <div class="place-header">
+                            <h3 th:text="${place.name}">Название места</h3>
+                            <div class="rating" th:if="${place.rating > 0}">
+                                ⭐ <span th:text="${#numbers.formatDecimal(place.rating, 1, 1)}">4.5</span>
+                            </div>
                         </div>
+                        <p class="address">📍 <span th:text="${place.address}">Адрес</span></p>
+                        <div class="amenities">
+                            <span class="amenity" th:if="${place.wifi}" th:title="'Wi-Fi: ' + ${place.wifiSpeed} + ' Mbps'">📶 Wi-Fi</span>
+                            <span class="amenity" th:if="${place.sockets.name() == 'MANY'}">🔌 Много розеток</span>
+                            <span class="amenity" th:if="${place.sockets.name() == 'FEW'}">🔌 Мало розеток</span>
+                            <span class="amenity" th:if="${place.noiseLevel.name() == 'QUIET'}">🤫 Тихо</span>
+                            <span class="amenity" th:if="${place.noiseLevel.name() == 'MEDIUM'}">😐 Средне</span>
+                            <span class="amenity" th:if="${place.noiseLevel.name() == 'NOISY'}">🔊 Шумно</span>
+                            <span class="amenity" th:if="${place.stayDurationAllowed}">⏰ Можно надолго</span>
+                        </div>
+                        <a th:href="@{/place/{id}(id=${place.id})}" class="btn btn-secondary">Подробнее</a>
                     </div>
-                    <p class="address">📍 <span th:text="${place.address}">Адрес</span></p>
-                    <div class="amenities">
-                        <span class="amenity" th:if="${place.wifi}" th:title="'Wi-Fi: ' + ${place.wifiSpeed} + ' Mbps'">📶 Wi-Fi</span>
-                        <span class="amenity" th:if="${place.sockets.name() == 'MANY'}">🔌 Много розеток</span>
-                        <span class="amenity" th:if="${place.sockets.name() == 'FEW'}">🔌 Мало розеток</span>
-                        <span class="amenity" th:if="${place.noiseLevel.name() == 'QUIET'}">🤫 Тихо</span>
-                        <span class="amenity" th:if="${place.noiseLevel.name() == 'MEDIUM'}">😐 Средне</span>
-                        <span class="amenity" th:if="${place.noiseLevel.name() == 'NOISY'}">🔊 Шумно</span>
-                        <span class="amenity" th:if="${place.stayDurationAllowed}">⏰ Можно надолго</span>
-                    </div>
-                    <a th:href="@{/place/{id}(id=${place.id})}" class="btn btn-secondary">Подробнее</a>
-                </div>
-            </div>
-        </section>
-    </main>
+                </article>
+            </section>
 
-    <footer class="footer footer-fixed">
-        <div class="container">
-            <p>© 2026 Где работать. Приложение для удалёнщиков.</p>
+            <button class="btn btn-secondary home-more-btn" type="button">Показать ещё</button>
         </div>
-    </footer>
 
-    <script th:src="${mapApiUrl}" type="text/javascript"></script>
-    <script>
-        const minskBounds = [
-            [53.79, 27.30],
-            [53.98, 27.77]
-        ];
+        <section class="map-section home-map-panel">
+            <div id="home-map" class="home-map"></div>
+            <p class="map-hint">Включите фильтр по карте, чтобы список автоматически обновлялся в пределах видимой области.</p>
+        </section>
+    </section>
+</main>
 
-        let homeMap;
-        let currentBounds = null;
-        const placeItems = Array.from(document.querySelectorAll('.place-card')).map((card) => ({
-            card,
-            latitude: Number(card.dataset.latitude),
-            longitude: Number(card.dataset.longitude),
-            title: card.querySelector('h3')?.textContent?.trim() || 'Заведение',
-            searchText: [
-                card.querySelector('h3')?.textContent,
-                card.querySelector('.address')?.textContent,
-                card.textContent
-            ].join(' ').toLowerCase(),
-            placemark: null
-        }));
-        const mapSearchInput = document.getElementById('filter-map-search');
-        const placeSearchInput = document.getElementById('place-search');
+<footer class="footer home-footer">
+    <div class="container home-footer-content">
+        <p>© 2026 Где работать. Все права защищены.</p>
+        <div class="home-footer-links">
+            <a href="#">О проекте</a>
+            <a sec:authorize="isAuthenticated()" th:href="@{/add-place}">Добавить место</a>
+            <a href="#">Контакты</a>
+        </div>
+    </div>
+</footer>
 
-        document.querySelectorAll('.filter-group input').forEach(input => {
-            input.addEventListener('change', filterPlaces);
+<script th:src="${mapApiUrl}" type="text/javascript"></script>
+<script>
+    const minskBounds = [
+        [53.79, 27.30],
+        [53.98, 27.77]
+    ];
+
+    let homeMap;
+    let currentBounds = null;
+    const resultsCounter = document.getElementById('results-count');
+    const placeItems = Array.from(document.querySelectorAll('.place-card')).map((card) => ({
+        card,
+        latitude: Number(card.dataset.latitude),
+        longitude: Number(card.dataset.longitude),
+        title: card.querySelector('h3')?.textContent?.trim() || 'Заведение',
+        searchText: [
+            card.querySelector('h3')?.textContent,
+            card.querySelector('.address')?.textContent,
+            card.textContent
+        ].join(' ').toLowerCase(),
+        placemark: null
+    }));
+    const mapSearchInput = document.getElementById('filter-map-search');
+    const placeSearchInput = document.getElementById('place-search');
+
+    document.querySelectorAll('.filter-group input').forEach(input => {
+        input.addEventListener('change', filterPlaces);
+    });
+
+    function isInCurrentBounds(placeItem) {
+        if (!currentBounds) {
+            return true;
+        }
+        const lat = placeItem.latitude;
+        const lon = placeItem.longitude;
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+            return false;
+        }
+
+        const southWest = currentBounds[0];
+        const northEast = currentBounds[1];
+
+        const isWithinLatitude = lat >= southWest[0] && lat <= northEast[0];
+        const isWithinLongitude = lon >= southWest[1] && lon <= northEast[1];
+
+        return isWithinLatitude && isWithinLongitude;
+    }
+
+    function normalizeText(value) {
+        return value ? value.toLowerCase().trim() : '';
+    }
+
+    function matchesPlaceSearch(placeItem, query) {
+        if (!query) {
+            return true;
+        }
+        const text = placeItem.searchText;
+        return text.includes(query);
+    }
+
+    function filterPlaces() {
+        const wifi = document.getElementById('filter-wifi').checked;
+        const sockets = document.getElementById('filter-sockets').checked;
+        const quiet = document.getElementById('filter-quiet').checked;
+        const longstay = document.getElementById('filter-longstay').checked;
+        const mapSearchEnabled = mapSearchInput.checked;
+        const searchQuery = normalizeText(placeSearchInput.value);
+        let visibleCount = 0;
+
+        placeItems.forEach(placeItem => {
+            const card = placeItem.card;
+            let show = true;
+
+            if (wifi && !card.querySelector('[title*="Wi-Fi"]')) show = false;
+            if (sockets && !card.textContent.includes('розеток')) show = false;
+            if (quiet && !card.classList.contains('quiet')) show = false;
+            if (longstay && !card.textContent.includes('Можно надолго')) show = false;
+            if (mapSearchEnabled && !isInCurrentBounds(placeItem)) show = false;
+            if (!matchesPlaceSearch(placeItem, searchQuery)) show = false;
+
+            card.style.display = show ? 'grid' : 'none';
+            if (show) {
+                visibleCount += 1;
+            }
+
+            if (placeItem.placemark) {
+                placeItem.placemark.options.set('visible', show);
+            }
         });
 
-        function isInCurrentBounds(placeItem) {
-            if (!currentBounds) {
-                return true;
-            }
+        if (resultsCounter) {
+            resultsCounter.textContent = visibleCount;
+        }
+    }
+
+    ymaps.ready(() => {
+        homeMap = new ymaps.Map('home-map', {
+            center: [53.9023, 27.5619],
+            zoom: 11,
+            controls: ['zoomControl', 'typeSelector', 'fullscreenControl']
+        });
+
+        homeMap.setBounds(minskBounds, {checkZoomRange: true});
+
+        placeItems.forEach(placeItem => {
             const lat = placeItem.latitude;
             const lon = placeItem.longitude;
+            const placeName = placeItem.title;
 
             if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-                return false;
+                return;
             }
 
-            const southWest = currentBounds[0];
-            const northEast = currentBounds[1];
+            const placemark = new ymaps.Placemark([lat, lon], {
+                balloonContent: placeName
+            }, {
+                preset: 'islands#violetDotIcon'
+            });
 
-            const isWithinLatitude = lat >= southWest[0] && lat <= northEast[0];
-            const isWithinLongitude = lon >= southWest[1] && lon <= northEast[1];
+            homeMap.geoObjects.add(placemark);
+            placeItem.placemark = placemark;
+        });
 
-            return isWithinLatitude && isWithinLongitude;
-        }
-
-        function normalizeText(value) {
-            return value ? value.toLowerCase().trim() : '';
-        }
-
-        function matchesPlaceSearch(placeItem, query) {
-            if (!query) {
-                return true;
+        homeMap.events.add('boundschange', (event) => {
+            if (!mapSearchInput.checked) {
+                return;
             }
-            const text = placeItem.searchText;
-            return text.includes(query);
-        }
 
-        function filterPlaces() {
-            const wifi = document.getElementById('filter-wifi').checked;
-            const sockets = document.getElementById('filter-sockets').checked;
-            const quiet = document.getElementById('filter-quiet').checked;
-            const longstay = document.getElementById('filter-longstay').checked;
-            const mapSearchEnabled = mapSearchInput.checked;
-            const searchQuery = normalizeText(placeSearchInput.value);
-            placeItems.forEach(placeItem => {
-                const card = placeItem.card;
-                let show = true;
-
-                if (wifi && !card.querySelector('[title*="Wi-Fi"]')) show = false;
-                if (sockets && !card.textContent.includes('розеток')) show = false;
-                if (quiet && !card.classList.contains('quiet')) show = false;
-                if (longstay && !card.textContent.includes('Можно надолго')) show = false;
-                if (mapSearchEnabled && !isInCurrentBounds(placeItem)) show = false;
-                if (!matchesPlaceSearch(placeItem, searchQuery)) show = false;
-
-                card.style.display = show ? 'block' : 'none';
-                if (placeItem.placemark) {
-                    placeItem.placemark.options.set('visible', show);
-                }
-            });
-        }
-
-        ymaps.ready(() => {
-            homeMap = new ymaps.Map('home-map', {
-                center: [53.9023, 27.5619],
-                zoom: 11,
-                controls: ['zoomControl', 'typeSelector', 'fullscreenControl']
-            });
-
-            homeMap.setBounds(minskBounds, {checkZoomRange: true});
-
-            placeItems.forEach(placeItem => {
-                const lat = placeItem.latitude;
-                const lon = placeItem.longitude;
-                const placeName = placeItem.title;
-
-                if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-                    return;
-                }
-
-                const placemark = new ymaps.Placemark([lat, lon], {
-                    balloonContent: placeName
-                }, {
-                    preset: 'islands#redDotIcon'
-                });
-
-                homeMap.geoObjects.add(placemark);
-                placeItem.placemark = placemark;
-            });
-
-            homeMap.events.add('boundschange', (event) => {
-                if (!mapSearchInput.checked) {
-                    return;
-                }
-
-                currentBounds = event.get('newBounds');
-                filterPlaces();
-            });
-
-            mapSearchInput.addEventListener('change', () => {
-                currentBounds = mapSearchInput.checked ? homeMap.getBounds() : null;
-                filterPlaces();
-            });
-
+            currentBounds = event.get('newBounds');
             filterPlaces();
         });
 
-        placeSearchInput.addEventListener('input', filterPlaces);
-    </script>
+        mapSearchInput.addEventListener('change', () => {
+            currentBounds = mapSearchInput.checked ? homeMap.getBounds() : null;
+            filterPlaces();
+        });
+
+        filterPlaces();
+    });
+
+    placeSearchInput.addEventListener('input', filterPlaces);
+</script>
 <script defer th:src="@{/js/feedback-widget.js}"></script>
 </body>
 </html>
