@@ -44,6 +44,8 @@ public class TelegramFeedbackService {
         String jsonBody = "{"
             + "\"id\":" + feedbackNumber + ","
             + "\"number\":" + feedbackNumber + ","
+            + "\"taskNumber\":" + feedbackNumber + ","
+            + "\"title\":\"" + feedbackNumber + "\","
             + "\"description\":\"" + escapeJson(description) + "\","
             + "\"chatId\":" + chatId + ","
             + "\"completed\":false"
