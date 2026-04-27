@@ -67,6 +67,14 @@
         </section>
 
         <section class="map-section">
+            <div class="map-search-wrapper">
+                <label for="place-search" class="map-search-label">Поиск по заведениям</label>
+                <input type="search"
+                       id="place-search"
+                       class="map-search-input"
+                       placeholder="Например: кофейня, коворкинг, центр"
+                       autocomplete="off">
+            </div>
             <div id="home-map" class="home-map"></div>
             <p class="map-hint">Включите «Поиск по карте», приблизьте район — список справа/ниже обновится по текущей области.</p>
         </section>
@@ -119,9 +127,15 @@
             latitude: Number(card.dataset.latitude),
             longitude: Number(card.dataset.longitude),
             title: card.querySelector('h3')?.textContent?.trim() || 'Заведение',
+            searchText: [
+                card.querySelector('h3')?.textContent,
+                card.querySelector('.address')?.textContent,
+                card.textContent
+            ].join(' ').toLowerCase(),
             placemark: null
         }));
         const mapSearchInput = document.getElementById('filter-map-search');
+        const placeSearchInput = document.getElementById('place-search');
 
         document.querySelectorAll('.filter-group input').forEach(input => {
             input.addEventListener('change', filterPlaces);
@@ -147,12 +161,25 @@
             return isWithinLatitude && isWithinLongitude;
         }
 
+        function normalizeText(value) {
+            return value ? value.toLowerCase().trim() : '';
+        }
+
+        function matchesPlaceSearch(placeItem, query) {
+            if (!query) {
+                return true;
+            }
+            const text = placeItem.searchText;
+            return text.includes(query);
+        }
+
         function filterPlaces() {
             const wifi = document.getElementById('filter-wifi').checked;
             const sockets = document.getElementById('filter-sockets').checked;
             const quiet = document.getElementById('filter-quiet').checked;
             const longstay = document.getElementById('filter-longstay').checked;
             const mapSearchEnabled = mapSearchInput.checked;
+            const searchQuery = normalizeText(placeSearchInput.value);
             placeItems.forEach(placeItem => {
                 const card = placeItem.card;
                 let show = true;
@@ -162,6 +189,7 @@
                 if (quiet && !card.classList.contains('quiet')) show = false;
                 if (longstay && !card.textContent.includes('Можно надолго')) show = false;
                 if (mapSearchEnabled && !isInCurrentBounds(placeItem)) show = false;
+                if (!matchesPlaceSearch(placeItem, searchQuery)) show = false;
 
                 card.style.display = show ? 'block' : 'none';
                 if (placeItem.placemark) {
@@ -214,6 +242,8 @@
 
             filterPlaces();
         });
+
+        placeSearchInput.addEventListener('input', filterPlaces);
     </script>
 <script defer th:src="@{/js/feedback-widget.js}"></script>
 </body>
