@@ -9,9 +9,9 @@
 
     function createWidget() {
         const wrapper = document.createElement('div');
-        wrapper.className = 'feedback-widget';
+        wrapper.className = 'feedback-widget feedback-widget-inline';
         wrapper.innerHTML = `
-            <button class="feedback-toggle" type="button" aria-label="Открыть форму обратной связи">💬</button>
+            <button class="feedback-toggle feedback-toggle-text" type="button" aria-label="Открыть форму обратной связи">Обратная связь</button>
             <div class="feedback-panel" hidden>
                 <h3>Обратная связь</h3>
                 <p class="feedback-hint">Поделитесь идеей или проблемой — сообщение придёт в Telegram-бот.</p>
@@ -33,7 +33,17 @@
                 </form>
             </div>
         `;
-        document.body.appendChild(wrapper);
+
+        const footerLinks = document.querySelector('.home-footer-links')
+            || document.querySelector('.footer-links')
+            || document.querySelector('.footer .container')
+            || document.querySelector('.footer');
+
+        if (footerLinks) {
+            footerLinks.appendChild(wrapper);
+        } else {
+            document.body.appendChild(wrapper);
+        }
 
         const toggle = wrapper.querySelector('.feedback-toggle');
         const panel = wrapper.querySelector('.feedback-panel');

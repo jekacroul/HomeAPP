@@ -17,10 +17,15 @@
     </div>
 </nav>
 
-<main class="container page-content">
-    <div class="form-container">
+<main class="container page-content add-place-page">
+    <section class="add-place-header card-surface">
         <h1>Добавить новое место</h1>
-        <form th:action="@{/add-place}" method="post" th:object="${place}" enctype="multipart/form-data">
+        <p>Заполните данные о заведении и отметьте точку на карте — после сохранения место появится в общем списке.</p>
+    </section>
+
+    <form class="add-place-form" th:action="@{/add-place}" method="post" th:object="${place}" enctype="multipart/form-data">
+        <section class="card-surface add-place-block">
+            <h2>Поиск и геопозиция</h2>
             <div class="form-group">
                 <label for="geo-search">Поиск заведений в Минске</label>
                 <div class="search-row">
@@ -35,58 +40,72 @@
                 <div id="place-map" class="place-map"></div>
                 <small class="hint">Выберите место из поиска или кликните по карте.</small>
             </div>
+        </section>
 
-            <div class="form-group">
-                <label for="name">Название *</label>
-                <input type="text" id="name" name="name" required placeholder="Например: Coffee & Work">
-            </div>
+        <section class="card-surface add-place-block">
+            <h2>Основная информация</h2>
+            <div class="form-grid-two">
+                <div class="form-group">
+                    <label for="name">Название *</label>
+                    <input type="text" id="name" name="name" required placeholder="Например: Coffee & Work">
+                </div>
 
-            <div class="form-group">
-                <label for="address">Адрес *</label>
-                <input type="text" id="address" name="address" required placeholder="ул. Ленина, 10">
+                <div class="form-group">
+                    <label for="address">Адрес *</label>
+                    <input type="text" id="address" name="address" required placeholder="ул. Ленина, 10">
+                </div>
             </div>
 
             <input type="hidden" id="latitude" name="latitude" required>
             <input type="hidden" id="longitude" name="longitude" required>
 
-            <div class="form-group">
-                <label for="imageUrl">URL изображения</label>
-                <input type="url" id="imageUrl" name="imageUrl" placeholder="https://...">
+            <div class="form-grid-two">
+                <div class="form-group">
+                    <label for="imageUrl">URL изображения</label>
+                    <input type="url" id="imageUrl" name="imageUrl" placeholder="https://...">
+                </div>
+
+                <div class="form-group">
+                    <label for="imageFile">или загрузите изображение с устройства</label>
+                    <input type="file" id="imageFile" name="imageFile" accept="image/*">
+                </div>
+            </div>
+        </section>
+
+        <section class="card-surface add-place-block">
+            <h2>Условия для работы</h2>
+            <div class="form-grid-two">
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="wifi" name="wifi">
+                        <span>Есть Wi-Fi</span>
+                    </label>
+                </div>
+
+                <div class="form-group" id="wifi-speed-group" style="display:none;">
+                    <label for="wifiSpeed">Скорость Wi-Fi (Mbps)</label>
+                    <input type="number" id="wifiSpeed" name="wifiSpeed" placeholder="50">
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="imageFile">или загрузите изображение с устройства</label>
-                <input type="file" id="imageFile" name="imageFile" accept="image/*">
-            </div>
+            <div class="form-grid-two">
+                <div class="form-group">
+                    <label for="noiseLevel">Уровень шума</label>
+                    <select id="noiseLevel" name="noiseLevel">
+                        <option value="QUIET">Тихо</option>
+                        <option value="MEDIUM" selected>Средне</option>
+                        <option value="NOISY">Шумно</option>
+                    </select>
+                </div>
 
-            <div class="form-group checkbox-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="wifi" name="wifi">
-                    <span>Есть Wi-Fi</span>
-                </label>
-            </div>
-
-            <div class="form-group" id="wifi-speed-group" style="display:none;">
-                <label for="wifiSpeed">Скорость Wi-Fi (Mbps)</label>
-                <input type="number" id="wifiSpeed" name="wifiSpeed" placeholder="50">
-            </div>
-
-            <div class="form-group">
-                <label for="noiseLevel">Уровень шума</label>
-                <select id="noiseLevel" name="noiseLevel">
-                    <option value="QUIET">Тихо</option>
-                    <option value="MEDIUM" selected>Средне</option>
-                    <option value="NOISY">Шумно</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="sockets">Розетки</label>
-                <select id="sockets" name="sockets">
-                    <option value="MANY">Много</option>
-                    <option value="FEW" selected>Мало</option>
-                    <option value="NONE">Нет</option>
-                </select>
+                <div class="form-group">
+                    <label for="sockets">Розетки</label>
+                    <select id="sockets" name="sockets">
+                        <option value="MANY">Много</option>
+                        <option value="FEW" selected>Мало</option>
+                        <option value="NONE">Нет</option>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group checkbox-group">
@@ -97,8 +116,8 @@
             </div>
 
             <button type="submit" class="btn btn-primary btn-large">Добавить место</button>
-        </form>
-    </div>
+        </section>
+    </form>
 </main>
 
 <script th:src="${mapApiUrl}" type="text/javascript"></script>
