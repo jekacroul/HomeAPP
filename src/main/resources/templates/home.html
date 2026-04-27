@@ -34,31 +34,33 @@
 
 <main class="container home-main home-layout-main">
     <section class="filters home-filters">
-        <div class="filter-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="filter-wifi" checked>
+        <div class="home-filter-pills" role="group" aria-label="Фильтры">
+            <button type="button" class="filter-pill is-active" data-filter="wifi" aria-pressed="true">
+                <span class="filter-pill-icon">📶</span>
                 <span>Wi-Fi</span>
-            </label>
-        </div>
-        <div class="filter-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="filter-sockets" checked>
+            </button>
+            <button type="button" class="filter-pill is-active" data-filter="sockets" aria-pressed="true">
+                <span class="filter-pill-icon">🔌</span>
                 <span>Розетки</span>
-            </label>
-        </div>
-        <div class="filter-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="filter-quiet">
+            </button>
+            <button type="button" class="filter-pill" data-filter="quiet" aria-pressed="false">
+                <span class="filter-pill-icon">🔇</span>
                 <span>Тихо</span>
-            </label>
-        </div>
-        <div class="filter-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="filter-longstay">
+            </button>
+            <button type="button" class="filter-pill" data-filter="longstay" aria-pressed="false">
+                <span class="filter-pill-icon">⏰</span>
                 <span>Можно надолго</span>
-            </label>
+            </button>
         </div>
-        <button class="btn btn-primary home-search-btn" type="button" onclick="filterPlaces()">Применить</button>
+
+        <div class="map-search-wrapper map-search-wrapper-inline">
+            <label for="place-search" class="map-search-label">Поиск по названию или району</label>
+            <input type="search"
+                   id="place-search"
+                   class="map-search-input"
+                   placeholder="Поиск по названию или району"
+                   autocomplete="off">
+        </div>
     </section>
 
     <section class="home-content-grid">
@@ -105,14 +107,6 @@
         </div>
 
         <section class="map-section home-map-panel">
-            <div class="map-search-wrapper map-search-wrapper-full">
-                <label for="place-search" class="map-search-label">Поиск по названию или району</label>
-                <input type="search"
-                       id="place-search"
-                       class="map-search-input"
-                       placeholder="Поиск по названию или району"
-                       autocomplete="off">
-            </div>
             <div id="home-map" class="home-map"></div>
             <p class="map-hint">Результаты обновляются автоматически при движении карты.</p>
         </section>
@@ -154,8 +148,14 @@
     }));
     const placeSearchInput = document.getElementById('place-search');
 
-    document.querySelectorAll('.filter-group input').forEach(input => {
-        input.addEventListener('change', filterPlaces);
+    const filterPills = Array.from(document.querySelectorAll('.filter-pill'));
+
+    filterPills.forEach((pill) => {
+        pill.addEventListener('click', () => {
+            const active = pill.classList.toggle('is-active');
+            pill.setAttribute('aria-pressed', String(active));
+            filterPlaces();
+        });
     });
 
     function isInCurrentBounds(placeItem) {
@@ -182,6 +182,11 @@
         return value ? value.toLowerCase().trim() : '';
     }
 
+
+    function isFilterActive(filterName) {
+        return document.querySelector(`.filter-pill[data-filter="${filterName}"]`)?.classList.contains('is-active');
+    }
+
     function matchesPlaceSearch(placeItem, query) {
         if (!query) {
             return true;
@@ -191,10 +196,10 @@
     }
 
     function filterPlaces() {
-        const wifi = document.getElementById('filter-wifi').checked;
-        const sockets = document.getElementById('filter-sockets').checked;
-        const quiet = document.getElementById('filter-quiet').checked;
-        const longstay = document.getElementById('filter-longstay').checked;
+        const wifi = isFilterActive('wifi');
+        const sockets = isFilterActive('sockets');
+        const quiet = isFilterActive('quiet');
+        const longstay = isFilterActive('longstay');
         const searchQuery = normalizeText(placeSearchInput.value);
         let visibleCount = 0;
 
