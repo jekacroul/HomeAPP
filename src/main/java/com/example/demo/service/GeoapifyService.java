@@ -15,11 +15,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class GeoapifyService {
 
     private static final String DEFAULT_RECT = "27.438915081299548,53.890216642813314,27.520990677155474,53.84386961984724";
+    private static final Pattern GOOGLE_IMAGE_PATTERN = Pattern.compile("https?:\\\\/\\\\/[^\"\\\\]{20,}?\\\\.(?:jpg|jpeg|png|webp)(?:[^\"\\\\]*)", Pattern.CASE_INSENSITIVE);
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -131,6 +135,76 @@ public class GeoapifyService {
         } catch (Exception ignored) {
             return List.of();
         }
+    }
+
+    public Optional<String> lookupPlaceImage(String placeName, String address) {
+        String normalizedName = placeName == null ? "" : placeName.trim();
+        if (normalizedName.isBlank()) {
+            return Optional.empty();
+        }
+
+        String searchQuery = (normalizedName + " " + (address == null ? "" : address)).trim();
+        String[] queries = new String[]{searchQuery, normalizedName + " Минск", normalizedName};
+
+        for (String query : queries) {
+            Optional<String> image = lookupFromGoogleImages(query);
+            if (image.isPresent()) {
+                return image;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<String> lookupFromGoogleImages(String query) {
+        try {
+            URI searchUri = UriComponentsBuilder
+                .fromUriString("https://images.google.com/search")
+                .queryParam("hl", "ru")
+                .queryParam("tbm", "isch")
+                .queryParam("q", query)
+                .build(true)
+                .toUri();
+
+            HttpRequest searchRequest = HttpRequest.newBuilder()
+                .uri(searchUri)
+                .timeout(Duration.ofSeconds(15))
+                .header("User-Agent", "Mozilla/5.0")
+                .header("Accept-Language", "ru-RU,ru;q=0.9,en;q=0.8")
+                .GET()
+                .build();
+
+            HttpResponse<String> searchResponse = httpClient.send(searchRequest, HttpResponse.BodyHandlers.ofString());
+            if (searchResponse.statusCode() < 200 || searchResponse.statusCode() >= 300) {
+                return Optional.empty();
+            }
+
+            return extractImageFromGoogleHtml(searchResponse.body());
+        } catch (Exception ignored) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<String> extractImageFromGoogleHtml(String html) {
+        Matcher matcher = GOOGLE_IMAGE_PATTERN.matcher(html);
+        while (matcher.find()) {
+            String candidate = matcher.group()
+                .replace("\\/", "/")
+                .replace("\\u003d", "=")
+                .replace("\\u0026", "&");
+
+            String lower = candidate.toLowerCase(Locale.ROOT);
+            if (lower.contains("gstatic.com")
+                || lower.contains("google.com")
+                || lower.contains("logo")
+                || lower.contains("sprite")) {
+                continue;
+            }
+
+            return Optional.of(candidate);
+        }
+
+        return Optional.empty();
     }
 
     private boolean isValidRect(String bbox) {

@@ -7,7 +7,7 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="add-place-redesign-page">
 <nav class="navbar">
     <div class="container nav-content">
         <a th:href="@{/}" class="logo">📍 Где работать</a>
@@ -20,12 +20,12 @@
 <main class="container page-content add-place-page">
     <section class="add-place-header card-surface">
         <h1>Добавить новое место</h1>
-        <p>Заполните данные о заведении и отметьте точку на карте — после сохранения место появится в общем списке.</p>
+        <p>Сначала найдите заведение в интернете: мы автоматически попробуем подтянуть его фото из Google Images. Если фото не найдено — выберите изображение вручную.</p>
     </section>
 
     <form class="add-place-form" th:action="@{/add-place}" method="post" th:object="${place}" enctype="multipart/form-data">
-        <section class="card-surface add-place-block">
-            <h2>Поиск и геопозиция</h2>
+        <section class="card-surface add-place-block add-place-search-block">
+            <h2>1) Поиск заведения и геопозиция</h2>
             <div class="form-group">
                 <label for="geo-search">Поиск заведений в Минске</label>
                 <div class="search-row">
@@ -38,12 +38,12 @@
             <div class="form-group">
                 <label>Место на карте *</label>
                 <div id="place-map" class="place-map"></div>
-                <small class="hint">Выберите место из поиска или кликните по карте.</small>
+                <small class="hint">Выберите место из списка или кликните по карте.</small>
             </div>
         </section>
 
         <section class="card-surface add-place-block">
-            <h2>Основная информация</h2>
+            <h2>2) Основная информация</h2>
             <div class="form-grid-two">
                 <div class="form-group">
                     <label for="name">Название *</label>
@@ -59,7 +59,9 @@
             <input type="hidden" id="latitude" name="latitude" required>
             <input type="hidden" id="longitude" name="longitude" required>
 
-            <div class="form-grid-two">
+            <div class="image-lookup-status" id="image-lookup-status">Сначала выберите заведение — затем выполним поиск фотографии в интернете.</div>
+
+            <div class="form-grid-two image-grid">
                 <div class="form-group">
                     <label for="imageUrl">URL изображения</label>
                     <input type="url" id="imageUrl" name="imageUrl" placeholder="https://...">
@@ -70,21 +72,46 @@
                     <input type="file" id="imageFile" name="imageFile" accept="image/*">
                 </div>
             </div>
+
+            <div class="image-preview-wrap" id="image-preview-wrap" hidden>
+                <img id="image-preview" alt="Предпросмотр фото заведения">
+                <button type="button" id="clear-image-btn" class="btn btn-outline">Выбрать другое фото</button>
+            </div>
         </section>
 
         <section class="card-surface add-place-block">
-            <h2>Условия для работы</h2>
-            <div class="form-grid-two">
-                <div class="form-group checkbox-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="wifi" name="wifi">
-                        <span>Есть Wi-Fi</span>
-                    </label>
-                </div>
+            <h2>3) Условия для работы</h2>
 
-                <div class="form-group" id="wifi-speed-group" style="display:none;">
+            <div class="add-place-filter-pills home-filter-pills" role="group" aria-label="Быстрые фильтры для места">
+                <button type="button" class="filter-pill" data-form-filter="wifi" aria-pressed="false">
+                    <span class="filter-pill-icon">📶</span>
+                    <span>Wi‑Fi</span>
+                </button>
+                <button type="button" class="filter-pill" data-form-filter="sockets" aria-pressed="false">
+                    <span class="filter-pill-icon">🔌</span>
+                    <span>Много розеток</span>
+                </button>
+                <button type="button" class="filter-pill" data-form-filter="quiet" aria-pressed="false">
+                    <span class="filter-pill-icon">🔇</span>
+                    <span>Тихо</span>
+                </button>
+                <button type="button" class="filter-pill" data-form-filter="longstay" aria-pressed="false">
+                    <span class="filter-pill-icon">⏰</span>
+                    <span>Можно надолго</span>
+                </button>
+            </div>
+
+            <div class="form-grid-two add-place-conditions-grid">
+                <div class="form-group">
+                    <input type="hidden" id="wifi" name="wifi" value="false">
                     <label for="wifiSpeed">Скорость Wi-Fi (Mbps)</label>
                     <input type="number" id="wifiSpeed" name="wifiSpeed" placeholder="50">
+                </div>
+
+                <div class="form-group">
+                    <input type="hidden" id="stayDurationAllowed" name="stayDurationAllowed" value="false">
+                    <label class="map-search-label">Можно сидеть долго</label>
+                    <div class="hint">Переключается кнопкой «Можно надолго» выше.</div>
                 </div>
             </div>
 
@@ -108,17 +135,20 @@
                 </div>
             </div>
 
-            <div class="form-group checkbox-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="stayDurationAllowed" name="stayDurationAllowed">
-                    <span>Можно сидеть долго</span>
-                </label>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-large">Добавить место</button>
+            <button type="submit" class="btn btn-primary btn-large">Сохранить заведение</button>
         </section>
     </form>
 </main>
+
+<footer class="footer home-footer">
+    <div class="container home-footer-content">
+        <p>© 2026 Где работать. Все права защищены.</p>
+        <div class="home-footer-links">
+            <a href="#">О проекте</a>
+            <a href="#">Контакты</a>
+        </div>
+    </div>
+</footer>
 
 <script th:src="${mapApiUrl}" type="text/javascript"></script>
 <script th:inline="javascript">
@@ -130,9 +160,23 @@
 
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
+    const nameInput = document.getElementById('name');
+    const addressInput = document.getElementById('address');
+    const imageUrlInput = document.getElementById('imageUrl');
+    const imageFileInput = document.getElementById('imageFile');
+    const imageStatus = document.getElementById('image-lookup-status');
+    const imagePreviewWrap = document.getElementById('image-preview-wrap');
+    const imagePreview = document.getElementById('image-preview');
+    const clearImageButton = document.getElementById('clear-image-btn');
+
     const searchInput = document.getElementById('geo-search');
     const searchButton = document.getElementById('geo-search-btn');
     const resultsBox = document.getElementById('geo-results');
+
+    const wifiInput = document.getElementById('wifi');
+    const socketsInput = document.getElementById('sockets');
+    const noiseLevelInput = document.getElementById('noiseLevel');
+    const longstayInput = document.getElementById('stayDurationAllowed');
 
     function setMarker(lat, lon) {
         latitudeInput.value = lat;
@@ -153,6 +197,63 @@
         searchMarkers = [];
     }
 
+    function setImageStatus(text, type) {
+        imageStatus.textContent = text;
+        imageStatus.classList.remove('is-success', 'is-error', 'is-loading');
+        if (type) {
+            imageStatus.classList.add(type);
+        }
+    }
+
+    function applyImageUrl(url) {
+        imageUrlInput.value = url;
+        imagePreview.src = url;
+        imagePreviewWrap.hidden = false;
+    }
+
+    function syncFilterPillsWithForm() {
+        document.querySelectorAll('[data-form-filter]').forEach((pill) => {
+            const key = pill.dataset.formFilter;
+            let active = false;
+
+            if (key === 'wifi') active = wifiInput.value === 'true';
+            if (key === 'sockets') active = socketsInput.value === 'MANY';
+            if (key === 'quiet') active = noiseLevelInput.value === 'QUIET';
+            if (key === 'longstay') active = longstayInput.value === 'true';
+
+            pill.classList.toggle('is-active', active);
+            pill.setAttribute('aria-pressed', String(active));
+        });
+    }
+
+    async function lookupPlaceImage(placeName, placeAddress) {
+        if (!placeName) {
+            return;
+        }
+
+        setImageStatus('Ищем фото заведения в интернете...', 'is-loading');
+
+        try {
+            const apiUrl = /*[[@{/api/place-image}]]*/ '/api/place-image';
+            const response = await fetch(apiUrl + '?name=' + encodeURIComponent(placeName) + '&address=' + encodeURIComponent(placeAddress || ''));
+            if (!response.ok) {
+                throw new Error('image lookup failed');
+            }
+
+            const payload = await response.json();
+            if (payload.imageUrl) {
+                applyImageUrl(payload.imageUrl);
+                setImageStatus('Фото найдено автоматически. При желании можете заменить вручную.', 'is-success');
+                return;
+            }
+
+            imagePreviewWrap.hidden = true;
+            setImageStatus('Фото не найдено. Укажите URL изображения или загрузите файл вручную.', 'is-error');
+        } catch (e) {
+            imagePreviewWrap.hidden = true;
+            setImageStatus('Не удалось выполнить поиск изображения. Выберите фото вручную.', 'is-error');
+        }
+    }
 
     async function searchPlaces() {
         const query = searchInput.value.trim();
@@ -170,10 +271,6 @@
             const north = Math.max(first[0], second[0]);
             const west = Math.min(first[1], second[1]);
             const east = Math.max(first[1], second[1]);
-
-            const southWest = [south, west];
-            const northEast = [north, east];
-            const area = [southWest, northEast];
 
             const bbox = west + ',' + north + ',' + east + ',' + south;
             const apiUrl = /*[[@{/api/minsk-places}]]*/ '/api/minsk-places';
@@ -208,11 +305,12 @@
                 searchMarkers.push(point);
                 allCoordinates.push([place.latitude, place.longitude]);
 
-                item.addEventListener('click', () => {
-                    document.getElementById('name').value = place.name;
-                    document.getElementById('address').value = place.address;
+                item.addEventListener('click', async () => {
+                    nameInput.value = place.name;
+                    addressInput.value = place.address;
                     setMarker(place.latitude, place.longitude);
                     point.balloon.open();
+                    await lookupPlaceImage(place.name, place.address);
                 });
 
                 resultsBox.appendChild(item);
@@ -249,8 +347,56 @@
         });
     });
 
-    document.getElementById('wifi').addEventListener('change', function() {
-        document.getElementById('wifi-speed-group').style.display = this.checked ? 'block' : 'none';
+    document.querySelectorAll('[data-form-filter]').forEach((pill) => {
+        pill.addEventListener('click', () => {
+            const key = pill.dataset.formFilter;
+            const shouldEnable = !pill.classList.contains('is-active');
+
+            if (key === 'wifi') {
+                wifiInput.value = String(shouldEnable);
+            }
+            if (key === 'sockets') {
+                socketsInput.value = shouldEnable ? 'MANY' : 'FEW';
+            }
+            if (key === 'quiet') {
+                noiseLevelInput.value = shouldEnable ? 'QUIET' : 'MEDIUM';
+            }
+            if (key === 'longstay') {
+                longstayInput.value = String(shouldEnable);
+            }
+
+            document.getElementById('wifiSpeed').disabled = wifiInput.value !== 'true';
+            syncFilterPillsWithForm();
+        });
+    });
+
+    [wifiInput, socketsInput, noiseLevelInput, longstayInput].forEach((input) => {
+        input.addEventListener('change', () => {
+            document.getElementById('wifiSpeed').disabled = wifiInput.value !== 'true';
+            syncFilterPillsWithForm();
+        });
+    });
+
+    clearImageButton.addEventListener('click', () => {
+        imageUrlInput.value = '';
+        imageFileInput.value = '';
+        imagePreviewWrap.hidden = true;
+        setImageStatus('Фото очищено. Можно заново выбрать URL или файл.', 'is-loading');
+    });
+
+    imageUrlInput.addEventListener('input', () => {
+        const value = imageUrlInput.value.trim();
+        if (value) {
+            applyImageUrl(value);
+            setImageStatus('Используется фото по указанному URL.', 'is-success');
+        }
+    });
+
+    imageFileInput.addEventListener('change', () => {
+        if (imageFileInput.files && imageFileInput.files[0]) {
+            imagePreviewWrap.hidden = true;
+            setImageStatus('Выбран локальный файл. Он будет загружен при сохранении.', 'is-success');
+        }
     });
 
     document.querySelector('form').addEventListener('submit', function(e) {
@@ -259,6 +405,9 @@
             alert('Выберите место на карте или через поиск.');
         }
     });
+
+    document.getElementById('wifiSpeed').disabled = true;
+    syncFilterPillsWithForm();
 </script>
 <script defer th:src="@{/js/feedback-widget.js}"></script>
 </body>
