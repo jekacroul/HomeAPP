@@ -913,7 +913,7 @@ body.home-page {
     background: #fff;
     border-radius: 14px;
     padding: 16px;
-    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.3);
+    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.38);
 }
 
 .feedback-form {
@@ -1292,7 +1292,7 @@ body {
 .admin-section,
 .auth-card {
     border: 1px solid #e5e7eb;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.14);
 }
 
 .form-container,
@@ -1335,7 +1335,7 @@ body.add-place-redesign-page {
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.13);
     padding: 20px;
 }
 
@@ -1478,7 +1478,7 @@ body.add-place-redesign-page {
 
 /* Final reference-aligned layout pass */
 :root {
-    --ref-bg: #f7f8fc;
+    --ref-bg: #e9edf5;
     --ref-surface: #ffffff;
     --ref-text: #0f172a;
     --ref-muted: #7c8498;
@@ -1503,7 +1503,7 @@ body.auth-page {
 .navbar {
     background: rgba(255, 255, 255, 0.98);
     border-bottom: 1px solid var(--ref-border);
-    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.09);
 }
 
 .nav-content {
@@ -2114,7 +2114,7 @@ body.home-page .home-list-panel {
     border: 1px solid #e5e7eb;
     border-radius: 16px;
     background: #fff;
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
     padding-left: 8px;
     padding-top: 8px;
 }
@@ -2141,7 +2141,7 @@ body.home-page .home-footer {
 .home-project-intro {
     padding: 16px 18px;
     border-radius: 16px;
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
 }
 
 .home-project-intro h1 {
@@ -2158,20 +2158,20 @@ body.home-page .home-footer {
     display: grid;
     gap: 10px;
     padding: 12px;
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
 }
 
 .home-list-toolbar {
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 14px;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.14);
     padding: 12px 14px;
 }
 
 body.home-page .home-map-panel {
     border: 1px solid #e5e7eb;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
 }
 
 @media (max-width: 1360px) {
