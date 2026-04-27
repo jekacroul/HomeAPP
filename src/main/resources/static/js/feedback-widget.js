@@ -1,4 +1,21 @@
 (function () {
+    const scriptSrc = document.currentScript ? document.currentScript.src : '';
+
+    function resolveContextPath() {
+        if (!scriptSrc) {
+            return '';
+        }
+
+        try {
+            const scriptUrl = new URL(scriptSrc, window.location.origin);
+            return scriptUrl.pathname.replace(/\/js\/feedback-widget\.js$/, '');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    const contextPath = resolveContextPath();
+
     function createWidget() {
         const wrapper = document.createElement('div');
         wrapper.className = 'feedback-widget';
@@ -49,7 +66,7 @@
 
             const formData = new FormData(form);
             try {
-                const response = await fetch('/feedback', {
+                const response = await fetch(`${contextPath}/feedback`, {
                     method: 'POST',
                     body: formData
                 });
