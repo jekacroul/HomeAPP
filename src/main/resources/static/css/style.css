@@ -2081,8 +2081,8 @@ body.home-page .home-layout-main {
     display: block;
     height: auto;
     min-height: 0;
-    padding-top: 12px;
-    padding-bottom: 24px;
+    padding-top: 0;
+    padding-bottom: 28px;
 }
 
 body.home-page .home-content-grid {
@@ -2094,23 +2094,26 @@ body.home-page .home-content-grid {
 }
 
 body.home-page .home-list-panel {
-    height: auto;
-    overflow: visible;
-    padding-bottom: 0;
+    max-height: calc(100vh - 118px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 8px;
+    padding-right: 6px;
 }
 
 body.home-page .home-map-panel {
     position: sticky;
-    top: 96px;
-    height: calc(100vh - 120px);
-    min-height: 520px;
-    overflow: hidden;
+    top: 68px;
+    height: calc(100vh - 132px);
+    min-height: 540px;
+    margin-bottom: 18px;
+    overflow: visible;
     padding: 0;
 }
 
 body.home-page .home-map {
     height: 100%;
-    min-height: 520px;
+    min-height: 540px;
 }
 
 .home-project-intro {
@@ -2137,5 +2140,12 @@ body.home-page .home-map {
         position: static;
         height: 460px;
         min-height: 460px;
+        margin-bottom: 0;
+    }
+
+    body.home-page .home-list-panel {
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
     }
 }
