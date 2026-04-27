@@ -24,10 +24,6 @@
     </section>
 
     <form class="add-place-form" th:action="@{/add-place}" method="post" th:object="${place}" enctype="multipart/form-data">
-        <section class="card-surface add-place-block add-place-actions-block">
-            <button type="submit" class="btn btn-primary">Сохранить заведение</button>
-        </section>
-
         <section class="card-surface add-place-block add-place-search-block">
             <h2>1) Поиск заведения и геопозиция</h2>
             <div class="form-group">
@@ -139,9 +135,20 @@
                 </div>
             </div>
 
+            <button type="submit" class="btn btn-primary btn-large">Сохранить заведение</button>
         </section>
     </form>
 </main>
+
+<footer class="footer home-footer">
+    <div class="container home-footer-content">
+        <p>© 2026 Где работать. Все права защищены.</p>
+        <div class="home-footer-links">
+            <a href="#">О проекте</a>
+            <a href="#">Контакты</a>
+        </div>
+    </div>
+</footer>
 
 <script th:src="${mapApiUrl}" type="text/javascript"></script>
 <script th:inline="javascript">

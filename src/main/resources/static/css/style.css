@@ -1354,15 +1354,6 @@ body.add-place-redesign-page {
     gap: 16px;
 }
 
-.add-place-actions-block {
-    display: flex;
-    justify-content: flex-end;
-}
-
-.add-place-actions-block .btn {
-    min-width: 220px;
-}
-
 .add-place-search-block {
     position: relative;
     overflow: hidden;
