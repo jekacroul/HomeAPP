@@ -20,10 +20,14 @@
 <main class="container page-content add-place-page">
     <section class="add-place-header card-surface">
         <h1>Добавить новое место</h1>
-        <p>Сначала найдите заведение в интернете: мы автоматически попробуем подтянуть его фото. Если фото не найдено — выберите изображение вручную.</p>
+        <p>Сначала найдите заведение в интернете: мы автоматически попробуем подтянуть его фото из Google Images. Если фото не найдено — выберите изображение вручную.</p>
     </section>
 
     <form class="add-place-form" th:action="@{/add-place}" method="post" th:object="${place}" enctype="multipart/form-data">
+        <section class="card-surface add-place-block add-place-actions-block">
+            <button type="submit" class="btn btn-primary">Сохранить заведение</button>
+        </section>
+
         <section class="card-surface add-place-block add-place-search-block">
             <h2>1) Поиск заведения и геопозиция</h2>
             <div class="form-group">
@@ -102,16 +106,16 @@
             </div>
 
             <div class="form-grid-two add-place-conditions-grid">
-                <div class="form-group checkbox-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="wifi" name="wifi">
-                        <span>Есть Wi-Fi</span>
-                    </label>
-                </div>
-
-                <div class="form-group" id="wifi-speed-group" style="display:none;">
+                <div class="form-group">
+                    <input type="hidden" id="wifi" name="wifi" value="false">
                     <label for="wifiSpeed">Скорость Wi-Fi (Mbps)</label>
                     <input type="number" id="wifiSpeed" name="wifiSpeed" placeholder="50">
+                </div>
+
+                <div class="form-group">
+                    <input type="hidden" id="stayDurationAllowed" name="stayDurationAllowed" value="false">
+                    <label class="map-search-label">Можно сидеть долго</label>
+                    <div class="hint">Переключается кнопкой «Можно надолго» выше.</div>
                 </div>
             </div>
 
@@ -135,14 +139,6 @@
                 </div>
             </div>
 
-            <div class="form-group checkbox-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="stayDurationAllowed" name="stayDurationAllowed">
-                    <span>Можно сидеть долго</span>
-                </label>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-large">Добавить место</button>
         </section>
     </form>
 </main>
@@ -171,7 +167,6 @@
     const resultsBox = document.getElementById('geo-results');
 
     const wifiInput = document.getElementById('wifi');
-    const wifiSpeedGroup = document.getElementById('wifi-speed-group');
     const socketsInput = document.getElementById('sockets');
     const noiseLevelInput = document.getElementById('noiseLevel');
     const longstayInput = document.getElementById('stayDurationAllowed');
@@ -214,10 +209,10 @@
             const key = pill.dataset.formFilter;
             let active = false;
 
-            if (key === 'wifi') active = wifiInput.checked;
+            if (key === 'wifi') active = wifiInput.value === 'true';
             if (key === 'sockets') active = socketsInput.value === 'MANY';
             if (key === 'quiet') active = noiseLevelInput.value === 'QUIET';
-            if (key === 'longstay') active = longstayInput.checked;
+            if (key === 'longstay') active = longstayInput.value === 'true';
 
             pill.classList.toggle('is-active', active);
             pill.setAttribute('aria-pressed', String(active));
@@ -351,7 +346,7 @@
             const shouldEnable = !pill.classList.contains('is-active');
 
             if (key === 'wifi') {
-                wifiInput.checked = shouldEnable;
+                wifiInput.value = String(shouldEnable);
             }
             if (key === 'sockets') {
                 socketsInput.value = shouldEnable ? 'MANY' : 'FEW';
@@ -360,17 +355,17 @@
                 noiseLevelInput.value = shouldEnable ? 'QUIET' : 'MEDIUM';
             }
             if (key === 'longstay') {
-                longstayInput.checked = shouldEnable;
+                longstayInput.value = String(shouldEnable);
             }
 
-            wifiSpeedGroup.style.display = wifiInput.checked ? 'block' : 'none';
+            document.getElementById('wifiSpeed').disabled = wifiInput.value !== 'true';
             syncFilterPillsWithForm();
         });
     });
 
     [wifiInput, socketsInput, noiseLevelInput, longstayInput].forEach((input) => {
         input.addEventListener('change', () => {
-            wifiSpeedGroup.style.display = wifiInput.checked ? 'block' : 'none';
+            document.getElementById('wifiSpeed').disabled = wifiInput.value !== 'true';
             syncFilterPillsWithForm();
         });
     });
@@ -404,6 +399,7 @@
         }
     });
 
+    document.getElementById('wifiSpeed').disabled = true;
     syncFilterPillsWithForm();
 </script>
 <script defer th:src="@{/js/feedback-widget.js}"></script>
