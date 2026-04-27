@@ -2075,3 +2075,67 @@ body.home-page .home-map-panel {
         margin-bottom: 10px;
     }
 }
+
+/* Home page layout fix: map from top-right + non-overlapping footer */
+body.home-page .home-layout-main {
+    display: block;
+    height: auto;
+    min-height: 0;
+    padding-top: 12px;
+    padding-bottom: 24px;
+}
+
+body.home-page .home-content-grid {
+    display: grid;
+    grid-template-columns: minmax(500px, 40%) minmax(0, 60%);
+    align-items: start;
+    gap: 16px;
+    height: auto;
+}
+
+body.home-page .home-list-panel {
+    height: auto;
+    overflow: visible;
+    padding-bottom: 0;
+}
+
+body.home-page .home-map-panel {
+    position: sticky;
+    top: 96px;
+    height: calc(100vh - 120px);
+    min-height: 520px;
+    overflow: hidden;
+    padding: 0;
+}
+
+body.home-page .home-map {
+    height: 100%;
+    min-height: 520px;
+}
+
+.home-project-intro {
+    padding: 16px 18px;
+    border-radius: 16px;
+}
+
+.home-project-intro h1 {
+    font-size: clamp(1.5rem, 2.2vw, 2rem);
+    margin-bottom: 8px;
+}
+
+.home-project-intro p {
+    color: #64748b;
+    line-height: 1.5;
+}
+
+@media (max-width: 1360px) {
+    body.home-page .home-content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.home-page .home-map-panel {
+        position: static;
+        height: 460px;
+        min-height: 460px;
+    }
+}
