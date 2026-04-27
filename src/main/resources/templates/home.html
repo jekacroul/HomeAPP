@@ -58,21 +58,7 @@
                 <span>Можно надолго</span>
             </label>
         </div>
-        <div class="filter-group filter-map-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="filter-map-search">
-                <span>Обновлять результаты при движении карты</span>
-            </label>
-        </div>
-        <div class="map-search-wrapper">
-            <label for="place-search" class="map-search-label">Поиск по названию или району</label>
-            <input type="search"
-                   id="place-search"
-                   class="map-search-input"
-                   placeholder="Поиск по названию или району"
-                   autocomplete="off">
-        </div>
-        <button class="btn btn-primary home-search-btn" type="button" onclick="filterPlaces()">Найти</button>
+        <button class="btn btn-primary home-search-btn" type="button" onclick="filterPlaces()">Применить</button>
     </section>
 
     <section class="home-content-grid">
@@ -119,8 +105,16 @@
         </div>
 
         <section class="map-section home-map-panel">
+            <div class="map-search-wrapper map-search-wrapper-full">
+                <label for="place-search" class="map-search-label">Поиск по названию или району</label>
+                <input type="search"
+                       id="place-search"
+                       class="map-search-input"
+                       placeholder="Поиск по названию или району"
+                       autocomplete="off">
+            </div>
             <div id="home-map" class="home-map"></div>
-            <p class="map-hint">Включите фильтр по карте, чтобы список автоматически обновлялся в пределах видимой области.</p>
+            <p class="map-hint">Результаты обновляются автоматически при движении карты.</p>
         </section>
     </section>
 </main>
@@ -158,7 +152,6 @@
         ].join(' ').toLowerCase(),
         placemark: null
     }));
-    const mapSearchInput = document.getElementById('filter-map-search');
     const placeSearchInput = document.getElementById('place-search');
 
     document.querySelectorAll('.filter-group input').forEach(input => {
@@ -202,7 +195,6 @@
         const sockets = document.getElementById('filter-sockets').checked;
         const quiet = document.getElementById('filter-quiet').checked;
         const longstay = document.getElementById('filter-longstay').checked;
-        const mapSearchEnabled = mapSearchInput.checked;
         const searchQuery = normalizeText(placeSearchInput.value);
         let visibleCount = 0;
 
@@ -214,7 +206,7 @@
             if (sockets && !card.textContent.includes('розеток')) show = false;
             if (quiet && !card.classList.contains('quiet')) show = false;
             if (longstay && !card.textContent.includes('Можно надолго')) show = false;
-            if (mapSearchEnabled && !isInCurrentBounds(placeItem)) show = false;
+            if (!isInCurrentBounds(placeItem)) show = false;
             if (!matchesPlaceSearch(placeItem, searchQuery)) show = false;
 
             card.style.display = show ? 'grid' : 'none';
@@ -260,17 +252,10 @@
             placeItem.placemark = placemark;
         });
 
+        currentBounds = homeMap.getBounds();
+
         homeMap.events.add('boundschange', (event) => {
-            if (!mapSearchInput.checked) {
-                return;
-            }
-
             currentBounds = event.get('newBounds');
-            filterPlaces();
-        });
-
-        mapSearchInput.addEventListener('change', () => {
-            currentBounds = mapSearchInput.checked ? homeMap.getBounds() : null;
             filterPlaces();
         });
 
