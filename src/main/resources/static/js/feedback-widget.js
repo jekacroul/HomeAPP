@@ -1,4 +1,12 @@
 (function () {
+    function resolveFeedbackEndpoint() {
+        const endpointFromPage = document.body?.dataset?.feedbackEndpoint;
+        if (endpointFromPage && endpointFromPage.trim().length > 0) {
+            return endpointFromPage;
+        }
+        return '/feedback';
+    }
+
     function createWidget() {
         const wrapper = document.createElement('div');
         wrapper.className = 'feedback-widget';
@@ -31,6 +39,7 @@
         const panel = wrapper.querySelector('.feedback-panel');
         const form = wrapper.querySelector('#feedback-form');
         const status = wrapper.querySelector('.feedback-status');
+        const feedbackEndpoint = resolveFeedbackEndpoint();
 
         toggle.addEventListener('click', () => {
             const isHidden = panel.hasAttribute('hidden');
@@ -49,13 +58,16 @@
 
             const formData = new FormData(form);
             try {
-                const response = await fetch('/feedback', {
+                const response = await fetch(feedbackEndpoint, {
                     method: 'POST',
                     body: formData
                 });
-                const payload = await response.json();
+                const contentType = response.headers.get('content-type') || '';
+                const payload = contentType.includes('application/json')
+                    ? await response.json()
+                    : {status: 'error', message: 'Сервер вернул неожиданный ответ.'};
 
-                if (payload.status === 'ok') {
+                if (response.ok && payload.status === 'ok') {
                     status.textContent = payload.message;
                     form.reset();
                     return;
