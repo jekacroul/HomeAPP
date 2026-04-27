@@ -124,17 +124,23 @@
             card,
             latitude: Number(card.dataset.latitude),
             longitude: Number(card.dataset.longitude),
+<<<<<<< codex/restore-map-search-and-filter-functionality-zpnqmd
             title: card.querySelector('h3')?.textContent?.trim() || '',
             address: card.querySelector('.address')?.textContent?.trim() || '',
             placemark: null
         }));
         const mapSearchInput = document.getElementById('filter-map-search');
         const placeSearchInput = document.getElementById('place-search');
+=======
+            title: card.querySelector('h3')?.textContent?.trim() || 'Заведение',
+            placemark: null
+        }));
+        const mapSearchInput = document.getElementById('filter-map-search');
+>>>>>>> main
 
         document.querySelectorAll('.filter-group input').forEach(input => {
             input.addEventListener('change', filterPlaces);
         });
-        placeSearchInput.addEventListener('input', filterPlaces);
 
         function isInCurrentBounds(placeItem) {
             if (!currentBounds) {
@@ -162,7 +168,10 @@
             const quiet = document.getElementById('filter-quiet').checked;
             const longstay = document.getElementById('filter-longstay').checked;
             const mapSearchEnabled = mapSearchInput.checked;
+<<<<<<< codex/restore-map-search-and-filter-functionality-zpnqmd
             const query = placeSearchInput.value.trim().toLowerCase();
+=======
+>>>>>>> main
             placeItems.forEach(placeItem => {
                 const card = placeItem.card;
                 let show = true;
@@ -173,7 +182,10 @@
                 if (quiet && !card.classList.contains('quiet')) show = false;
                 if (longstay && !card.textContent.includes('Можно надолго')) show = false;
                 if (mapSearchEnabled && !isInCurrentBounds(placeItem)) show = false;
+<<<<<<< codex/restore-map-search-and-filter-functionality-zpnqmd
                 if (query && !searchText.includes(query)) show = false;
+=======
+>>>>>>> main
 
                 card.style.display = show ? 'block' : 'none';
                 if (placeItem.placemark) {
@@ -194,7 +206,11 @@
             placeItems.forEach(placeItem => {
                 const lat = placeItem.latitude;
                 const lon = placeItem.longitude;
+<<<<<<< codex/restore-map-search-and-filter-functionality-zpnqmd
                 const placeName = placeItem.title || 'Заведение';
+=======
+                const placeName = placeItem.title;
+>>>>>>> main
 
                 if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
                     return;
