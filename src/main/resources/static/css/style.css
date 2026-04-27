@@ -2081,8 +2081,8 @@ body.home-page .home-layout-main {
     display: block;
     height: auto;
     min-height: 0;
-    padding-top: 0;
-    padding-bottom: 28px;
+    padding-top: 10px;
+    padding-bottom: 12px;
 }
 
 body.home-page .home-content-grid {
@@ -2094,16 +2094,24 @@ body.home-page .home-content-grid {
 }
 
 body.home-page .home-list-panel {
-    max-height: calc(100vh - 118px);
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    gap: 12px;
+    height: calc(100vh - 130px);
+    min-height: 620px;
+    overflow: hidden;
+}
+
+.home-scroll-list {
     overflow-y: auto;
     overflow-x: hidden;
-    padding-bottom: 8px;
     padding-right: 6px;
+    padding-bottom: 10px;
 }
 
 body.home-page .home-map-panel {
     position: sticky;
-    top: 68px;
+    top: 64px;
     height: calc(100vh - 132px);
     min-height: 540px;
     margin-bottom: 18px;
@@ -2131,6 +2139,12 @@ body.home-page .home-map {
     line-height: 1.5;
 }
 
+.home-search-panel {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+}
+
 @media (max-width: 1360px) {
     body.home-page .home-content-grid {
         grid-template-columns: 1fr;
@@ -2144,7 +2158,12 @@ body.home-page .home-map {
     }
 
     body.home-page .home-list-panel {
-        max-height: none;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .home-scroll-list {
         overflow: visible;
         padding-right: 0;
     }

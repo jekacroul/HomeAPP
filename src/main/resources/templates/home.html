@@ -34,33 +34,35 @@
                     <p>Кафе, коворкинги и другие пространства с Wi-Fi, розетками и комфортной атмосферой.</p>
                 </section>
 
-                <div class="map-search-wrapper map-search-wrapper-inline">
-                    <label for="place-search" class="map-search-label">Поиск по названию или району</label>
-                    <input type="search"
-                           id="place-search"
-                           class="map-search-input"
-                           placeholder="Поиск по названию или району"
-                           autocomplete="off">
-                </div>
+                <section class="home-search-panel card-surface">
+                    <div class="map-search-wrapper map-search-wrapper-inline">
+                        <label for="place-search" class="map-search-label">Поиск по названию или району</label>
+                        <input type="search"
+                               id="place-search"
+                               class="map-search-input"
+                               placeholder="Поиск по названию или району"
+                               autocomplete="off">
+                    </div>
 
-                <div class="home-filter-pills" role="group" aria-label="Фильтры">
-                    <button type="button" class="filter-pill is-active" data-filter="wifi" aria-pressed="true">
-                        <span class="filter-pill-icon">📶</span>
-                        <span>Wi-Fi</span>
-                    </button>
-                    <button type="button" class="filter-pill is-active" data-filter="sockets" aria-pressed="true">
-                        <span class="filter-pill-icon">🔌</span>
-                        <span>Розетки</span>
-                    </button>
-                    <button type="button" class="filter-pill" data-filter="quiet" aria-pressed="false">
-                        <span class="filter-pill-icon">🔇</span>
-                        <span>Тихо</span>
-                    </button>
-                    <button type="button" class="filter-pill" data-filter="longstay" aria-pressed="false">
-                        <span class="filter-pill-icon">⏰</span>
-                        <span>Можно надолго</span>
-                    </button>
-                </div>
+                    <div class="home-filter-pills" role="group" aria-label="Фильтры">
+                        <button type="button" class="filter-pill is-active" data-filter="wifi" aria-pressed="true">
+                            <span class="filter-pill-icon">📶</span>
+                            <span>Wi-Fi</span>
+                        </button>
+                        <button type="button" class="filter-pill is-active" data-filter="sockets" aria-pressed="true">
+                            <span class="filter-pill-icon">🔌</span>
+                            <span>Розетки</span>
+                        </button>
+                        <button type="button" class="filter-pill" data-filter="quiet" aria-pressed="false">
+                            <span class="filter-pill-icon">🔇</span>
+                            <span>Тихо</span>
+                        </button>
+                        <button type="button" class="filter-pill" data-filter="longstay" aria-pressed="false">
+                            <span class="filter-pill-icon">⏰</span>
+                            <span>Можно надолго</span>
+                        </button>
+                    </div>
+                </section>
             </div>
 
             <div class="home-list-toolbar">
@@ -74,34 +76,37 @@
                 </label>
             </div>
 
-            <section class="places-grid" id="places-grid">
-                <article class="place-card" th:each="place : ${places}"
-                         th:attr="data-latitude=${place.latitude},data-longitude=${place.longitude}"
-                         th:classappend="${place.noiseLevel.name() == 'QUIET'} ? 'quiet' : (${place.noiseLevel.name() == 'NOISY'} ? 'noisy' : '')">
-                    <div class="place-image" th:style="|background-image: url('@{${place.imageUrl}}')|"></div>
-                    <div class="place-content">
-                        <div class="place-header">
-                            <h3 th:text="${place.name}">Название места</h3>
-                            <div class="rating" th:if="${place.rating > 0}">
-                                ⭐ <span th:text="${#numbers.formatDecimal(place.rating, 1, 1)}">4.5</span>
-                            </div>
-                        </div>
-                        <p class="address">📍 <span th:text="${place.address}">Адрес</span></p>
-                        <div class="amenities">
-                            <span class="amenity" th:if="${place.wifi}" th:title="'Wi-Fi: ' + ${place.wifiSpeed} + ' Mbps'">📶 Wi-Fi</span>
-                            <span class="amenity" th:if="${place.sockets.name() == 'MANY'}">🔌 Много розеток</span>
-                            <span class="amenity" th:if="${place.sockets.name() == 'FEW'}">🔌 Мало розеток</span>
-                            <span class="amenity" th:if="${place.noiseLevel.name() == 'QUIET'}">🤫 Тихо</span>
-                            <span class="amenity" th:if="${place.noiseLevel.name() == 'MEDIUM'}">😐 Средне</span>
-                            <span class="amenity" th:if="${place.noiseLevel.name() == 'NOISY'}">🔊 Шумно</span>
-                            <span class="amenity" th:if="${place.stayDurationAllowed}">⏰ Можно надолго</span>
-                        </div>
-                        <a th:href="@{/place/{id}(id=${place.id})}" class="btn btn-secondary">Подробнее</a>
-                    </div>
-                </article>
-            </section>
+            <div class="home-scroll-list">
 
-            <button class="btn btn-secondary home-more-btn" type="button">Показать ещё</button>
+                <section class="places-grid" id="places-grid">
+                    <article class="place-card" th:each="place : ${places}"
+                             th:attr="data-latitude=${place.latitude},data-longitude=${place.longitude}"
+                             th:classappend="${place.noiseLevel.name() == 'QUIET'} ? 'quiet' : (${place.noiseLevel.name() == 'NOISY'} ? 'noisy' : '')">
+                        <div class="place-image" th:style="|background-image: url('@{${place.imageUrl}}')|"></div>
+                        <div class="place-content">
+                            <div class="place-header">
+                                <h3 th:text="${place.name}">Название места</h3>
+                                <div class="rating" th:if="${place.rating > 0}">
+                                    ⭐ <span th:text="${#numbers.formatDecimal(place.rating, 1, 1)}">4.5</span>
+                                </div>
+                            </div>
+                            <p class="address">📍 <span th:text="${place.address}">Адрес</span></p>
+                            <div class="amenities">
+                                <span class="amenity" th:if="${place.wifi}" th:title="'Wi-Fi: ' + ${place.wifiSpeed} + ' Mbps'">📶 Wi-Fi</span>
+                                <span class="amenity" th:if="${place.sockets.name() == 'MANY'}">🔌 Много розеток</span>
+                                <span class="amenity" th:if="${place.sockets.name() == 'FEW'}">🔌 Мало розеток</span>
+                                <span class="amenity" th:if="${place.noiseLevel.name() == 'QUIET'}">🤫 Тихо</span>
+                                <span class="amenity" th:if="${place.noiseLevel.name() == 'MEDIUM'}">😐 Средне</span>
+                                <span class="amenity" th:if="${place.noiseLevel.name() == 'NOISY'}">🔊 Шумно</span>
+                                <span class="amenity" th:if="${place.stayDurationAllowed}">⏰ Можно надолго</span>
+                            </div>
+                            <a th:href="@{/place/{id}(id=${place.id})}" class="btn btn-secondary">Подробнее</a>
+                        </div>
+                    </article>
+                </section>
+
+                <button class="btn btn-secondary home-more-btn" type="button">Показать ещё</button>
+            </div>
         </div>
 
         <section class="map-section home-map-panel">
