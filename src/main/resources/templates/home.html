@@ -114,33 +114,18 @@
 
         let homeMap;
         let currentBounds = null;
-<<<<<<< codex/add-location-based-search-filter-031m9b
-        const placeItems = Array.from(document.querySelectorAll('.place-card')).map((card) => {
-            const title = card.querySelector('h3')?.textContent?.trim() || '';
-            const address = card.querySelector('.address')?.textContent?.trim() || '';
-            const latitude = Number(card.dataset.latitude);
-            const longitude = Number(card.dataset.longitude);
-            return {
-                card,
-                title,
-                address,
-                latitude,
-                longitude,
-                placemark: null
-            };
-        });
+        const placeItems = Array.from(document.querySelectorAll('.place-card')).map((card) => ({
+            card,
+            latitude: Number(card.dataset.latitude),
+            longitude: Number(card.dataset.longitude),
+            title: card.querySelector('h3')?.textContent?.trim() || 'Заведение',
+            placemark: null
+        }));
         const mapSearchInput = document.getElementById('filter-map-search');
-        const placeSearchInput = document.getElementById('place-search');
-=======
-
-        const cards = Array.from(document.querySelectorAll('.place-card'));
-        const mapSearchInput = document.getElementById('filter-map-search');
->>>>>>> main
 
         document.querySelectorAll('.filter-group input').forEach(input => {
             input.addEventListener('change', filterPlaces);
         });
-        placeSearchInput.addEventListener('input', filterPlaces);
 
         function isInCurrentBounds(placeItem) {
             if (!currentBounds) {
@@ -162,62 +147,21 @@
             return isWithinLatitude && isWithinLongitude;
         }
 
-        function matchesText(placeItem, query) {
-            if (!query) {
-                return true;
-            }
-            const haystack = `${placeItem.title} ${placeItem.address}`.toLowerCase();
-            return haystack.includes(query);
-        }
-
-        function isInCurrentBounds(card) {
-            if (!currentBounds) {
-                return true;
-            }
-
-            const lat = Number(card.dataset.latitude);
-            const lon = Number(card.dataset.longitude);
-
-            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-                return false;
-            }
-
-            const southWest = currentBounds[0];
-            const northEast = currentBounds[1];
-
-            const isWithinLatitude = lat >= southWest[0] && lat <= northEast[0];
-            const isWithinLongitude = lon >= southWest[1] && lon <= northEast[1];
-
-            return isWithinLatitude && isWithinLongitude;
-        }
-
         function filterPlaces() {
             const wifi = document.getElementById('filter-wifi').checked;
             const sockets = document.getElementById('filter-sockets').checked;
             const quiet = document.getElementById('filter-quiet').checked;
             const longstay = document.getElementById('filter-longstay').checked;
             const mapSearchEnabled = mapSearchInput.checked;
-<<<<<<< codex/add-location-based-search-filter-031m9b
-            const query = placeSearchInput.value.trim().toLowerCase();
-
             placeItems.forEach(placeItem => {
                 const card = placeItem.card;
-=======
-
-            cards.forEach(card => {
->>>>>>> main
                 let show = true;
 
                 if (wifi && !card.querySelector('[title*="Wi-Fi"]')) show = false;
                 if (sockets && !card.textContent.includes('розеток')) show = false;
                 if (quiet && !card.classList.contains('quiet')) show = false;
                 if (longstay && !card.textContent.includes('Можно надолго')) show = false;
-<<<<<<< codex/add-location-based-search-filter-031m9b
-                if (!matchesText(placeItem, query)) show = false;
                 if (mapSearchEnabled && !isInCurrentBounds(placeItem)) show = false;
-=======
-                if (mapSearchEnabled && !isInCurrentBounds(card)) show = false;
->>>>>>> main
 
                 card.style.display = show ? 'block' : 'none';
                 if (placeItem.placemark) {
@@ -235,17 +179,10 @@
 
             homeMap.setBounds(minskBounds, {checkZoomRange: true});
 
-<<<<<<< codex/add-location-based-search-filter-031m9b
             placeItems.forEach(placeItem => {
                 const lat = placeItem.latitude;
                 const lon = placeItem.longitude;
-                const placeName = placeItem.title || 'Заведение';
-=======
-            cards.forEach(card => {
-                const lat = Number(card.dataset.latitude);
-                const lon = Number(card.dataset.longitude);
-                const placeName = card.querySelector('h3')?.textContent?.trim() || 'Заведение';
->>>>>>> main
+                const placeName = placeItem.title;
 
                 if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
                     return;
@@ -258,10 +195,7 @@
                 });
 
                 homeMap.geoObjects.add(placemark);
-<<<<<<< codex/add-location-based-search-filter-031m9b
                 placeItem.placemark = placemark;
-=======
->>>>>>> main
             });
 
             homeMap.events.add('boundschange', (event) => {
