@@ -186,6 +186,17 @@ public class HomeController {
         return geoapifyService.searchInMinsk(query, 50, bbox);
     }
 
+    @GetMapping(value = "/api/place-image", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, String> searchPlaceImage(
+        @RequestParam(value = "name", required = false) String name,
+        @RequestParam(value = "address", required = false) String address
+    ) {
+        return geoapifyService.lookupPlaceImage(name, address)
+            .map(url -> Map.of("imageUrl", url))
+            .orElseGet(() -> Map.of("imageUrl", ""));
+    }
+
     @PostMapping(value = "/add-place", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public String addPlace(@ModelAttribute Place place,
                            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,

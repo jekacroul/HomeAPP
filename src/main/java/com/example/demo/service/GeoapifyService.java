@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 @Service
 public class GeoapifyService {
@@ -130,6 +131,104 @@ public class GeoapifyService {
             return allSuggestions.stream().limit(20).toList();
         } catch (Exception ignored) {
             return List.of();
+        }
+    }
+
+    public Optional<String> lookupPlaceImage(String placeName, String address) {
+        String normalizedName = placeName == null ? "" : placeName.trim();
+        if (normalizedName.isBlank()) {
+            return Optional.empty();
+        }
+
+        String searchQuery = (normalizedName + " " + (address == null ? "" : address) + " Минск").trim();
+        String[] queries = new String[]{searchQuery, normalizedName + " Минск", normalizedName};
+
+        for (String query : queries) {
+            Optional<String> image = lookupFromWikipedia(query);
+            if (image.isPresent()) {
+                return image;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<String> lookupFromWikipedia(String query) {
+        try {
+            URI searchUri = UriComponentsBuilder
+                .fromUriString("https://ru.wikipedia.org/w/api.php")
+                .queryParam("action", "query")
+                .queryParam("format", "json")
+                .queryParam("list", "search")
+                .queryParam("srsearch", query)
+                .queryParam("srlimit", 5)
+                .queryParam("utf8", 1)
+                .build(true)
+                .toUri();
+
+            HttpRequest searchRequest = HttpRequest.newBuilder()
+                .uri(searchUri)
+                .timeout(Duration.ofSeconds(15))
+                .GET()
+                .build();
+
+            HttpResponse<String> searchResponse = httpClient.send(searchRequest, HttpResponse.BodyHandlers.ofString());
+            if (searchResponse.statusCode() < 200 || searchResponse.statusCode() >= 300) {
+                return Optional.empty();
+            }
+
+            JsonNode searchRoot = objectMapper.readTree(searchResponse.body());
+            JsonNode results = searchRoot.path("query").path("search");
+            if (!results.isArray()) {
+                return Optional.empty();
+            }
+
+            for (JsonNode result : results) {
+                String pageTitle = result.path("title").asText("").trim();
+                if (pageTitle.isBlank()) {
+                    continue;
+                }
+
+                Optional<String> thumbnail = lookupWikipediaThumbnail(pageTitle);
+                if (thumbnail.isPresent()) {
+                    return thumbnail;
+                }
+            }
+        } catch (Exception ignored) {
+            return Optional.empty();
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<String> lookupWikipediaThumbnail(String pageTitle) {
+        try {
+            URI summaryUri = UriComponentsBuilder
+                .fromUriString("https://ru.wikipedia.org/api/rest_v1/page/summary/{title}")
+                .buildAndExpand(pageTitle)
+                .encode()
+                .toUri();
+
+            HttpRequest summaryRequest = HttpRequest.newBuilder()
+                .uri(summaryUri)
+                .timeout(Duration.ofSeconds(15))
+                .GET()
+                .build();
+
+            HttpResponse<String> summaryResponse = httpClient.send(summaryRequest, HttpResponse.BodyHandlers.ofString());
+            if (summaryResponse.statusCode() < 200 || summaryResponse.statusCode() >= 300) {
+                return Optional.empty();
+            }
+
+            JsonNode summaryRoot = objectMapper.readTree(summaryResponse.body());
+            String imageUrl = summaryRoot.path("thumbnail").path("source").asText("").trim();
+            if (imageUrl.isBlank()) {
+                return Optional.empty();
+            }
+
+            return Optional.of(imageUrl);
+        } catch (Exception ignored) {
+            return Optional.empty();
         }
     }
 
