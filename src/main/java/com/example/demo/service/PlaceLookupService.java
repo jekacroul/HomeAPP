@@ -2,7 +2,6 @@ package com.example.demo.service;
 
 import com.example.demo.model.Place;
 import com.example.demo.repository.PlaceRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -26,9 +25,6 @@ public class PlaceLookupService {
     private final PlaceRepository placeRepository;
     private final HttpClient httpClient;
 
-    @Value("${places.search-limit:50}")
-    private int searchLimit;
-
     public PlaceLookupService(PlaceRepository placeRepository) {
         this.placeRepository = placeRepository;
         this.httpClient = HttpClient.newBuilder()
@@ -37,7 +33,7 @@ public class PlaceLookupService {
     }
 
     public List<GeoPlaceSuggestion> searchInMinsk(String query, int limit, String bbox) {
-        int safeLimit = Math.max(20, Math.min(Math.max(limit, searchLimit), 100));
+        int safeLimit = Math.max(1, Math.min(limit, 100));
         Bounds bounds = parseBounds(bbox);
         String queryLower = query == null ? "" : query.toLowerCase(Locale.ROOT).trim();
 
