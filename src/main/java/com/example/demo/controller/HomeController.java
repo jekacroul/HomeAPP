@@ -52,6 +52,7 @@ public class HomeController {
     public String home(Model model, Authentication authentication) {
         List<Place> places = placeRepository.findAll();
         model.addAttribute("places", places);
+        model.addAttribute("mapApiUrl", mapApiUrl);
 
         getCurrentUser(authentication).ifPresent(user -> model.addAttribute("currentUser", user));
 
