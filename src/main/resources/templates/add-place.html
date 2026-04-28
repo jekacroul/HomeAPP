@@ -256,15 +256,6 @@
         return place.name + '<br>' + place.address + websiteHtml;
     }
 
-    async function geocodeToPlaces(request, options) {
-        const geocodeResult = await ymaps.geocode(request, options || {});
-        const places = [];
-        geocodeResult.geoObjects.each((geoObject) => {
-            places.push(extractPlaceInfo(geoObject));
-        });
-        return places;
-    }
-
     function deduplicatePlaces(places) {
         const used = new Set();
         return places.filter((place) => {
@@ -277,61 +268,41 @@
         });
     }
 
-    function isInsideBounds(place, bounds) {
-        const latMin = Math.min(bounds[0][0], bounds[1][0]);
-        const latMax = Math.max(bounds[0][0], bounds[1][0]);
-        const lonMin = Math.min(bounds[0][1], bounds[1][1]);
-        const lonMax = Math.max(bounds[0][1], bounds[1][1]);
-
-        return place.latitude >= latMin
-            && place.latitude <= latMax
-            && place.longitude >= lonMin
-            && place.longitude <= lonMax;
-    }
-
-    function isRelevantPlace(place, query) {
-        const normalizedQuery = query.toLowerCase().trim();
-        if (!normalizedQuery) return true;
-        const haystack = (place.name + ' ' + place.address).toLowerCase();
-        const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
-        return tokens.every((token) => haystack.includes(token));
-    }
-
-    async function lookupPlacesInYandex(query) {
-        const searchText = query + ', Минск';
-        const bounds = map.getBounds() || minskBounds;
-        const placesFromSuggest = [];
-
-        if (typeof ymaps.suggest === 'function') {
-            const suggestions = await ymaps.suggest(searchText, {
-                boundedBy: bounds,
-                provider: 'yandex#search',
-                results: 12
-            });
-            const suggestionPlaces = await Promise.all(
-                suggestions.map(async (suggestion) => {
-                    const bySuggestion = await geocodeToPlaces(suggestion.value + ', Минск', {
-                        kind: 'biz',
-                        boundedBy: minskBounds,
-                        strictBounds: true,
-                        results: 1
-                    });
-                    return bySuggestion[0] || null;
-                })
-            );
-            placesFromSuggest.push(...suggestionPlaces.filter(Boolean));
+    function formatBbox(bounds) {
+        if (!bounds || bounds.length !== 2) {
+            return '';
         }
 
-        const placesFromGeocode = await geocodeToPlaces(searchText, {
-            kind: 'biz',
-            boundedBy: minskBounds,
-            strictBounds: true,
-            results: 20
-        });
+        const southWest = bounds[0];
+        const northEast = bounds[1];
+        const west = southWest[1];
+        const south = southWest[0];
+        const east = northEast[1];
+        const north = northEast[0];
+        return [west, north, east, south].join(',');
+    }
 
-        return deduplicatePlaces([...placesFromSuggest, ...placesFromGeocode])
-            .filter((place) => isInsideBounds(place, minskBounds))
-            .filter((place) => isRelevantPlace(place, query));
+    async function lookupPlaces(query) {
+        const bbox = formatBbox(map.getBounds() || minskBounds);
+        const apiUrl = /*[[@{/api/minsk-places}]]*/ '/api/minsk-places';
+        const response = await fetch(
+            apiUrl
+            + '?query=' + encodeURIComponent(query)
+            + '&bbox=' + encodeURIComponent(bbox)
+        );
+
+        if (!response.ok) {
+            throw new Error('place lookup failed');
+        }
+
+        const payload = await response.json();
+        return deduplicatePlaces((payload || []).map((place) => ({
+            name: (place.name || '').trim() || 'Без названия',
+            address: (place.address || '').trim() || 'Без адреса',
+            website: '',
+            latitude: Number(place.latitude),
+            longitude: Number(place.longitude)
+        })).filter((place) => Number.isFinite(place.latitude) && Number.isFinite(place.longitude));
     }
 
     async function lookupPlaceImage(placeName, placeAddress, placeWebsite) {
@@ -374,7 +345,7 @@
         resultsBox.innerHTML = '<div class="result-item muted">Ищем...</div>';
 
         try {
-            const places = await lookupPlacesInYandex(query);
+            const places = await lookupPlaces(query);
             clearSearchMarkers();
 
             if (!places.length) {
@@ -425,13 +396,12 @@
 
     async function pickBusinessByCoordinates(coords) {
         try {
-            const geocodeResult = await ymaps.geocode(coords, {
-                kind: 'biz',
-                results: 1
-            });
+            const geocodeResult = await ymaps.geocode(coords, {results: 1});
             const firstObject = geocodeResult.geoObjects.get(0);
             if (!firstObject) {
                 setMarker(coords[0], coords[1]);
+                nameInput.value = 'Точка на карте';
+                addressInput.value = coords[0].toFixed(6) + ', ' + coords[1].toFixed(6);
                 return;
             }
 
@@ -452,6 +422,8 @@
             await lookupPlaceImage(place.name, place.address, place.website);
         } catch (e) {
             setMarker(coords[0], coords[1]);
+            nameInput.value = 'Точка на карте';
+            addressInput.value = coords[0].toFixed(6) + ', ' + coords[1].toFixed(6);
         }
     }
 
