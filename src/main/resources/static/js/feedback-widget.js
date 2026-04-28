@@ -13,6 +13,7 @@
         wrapper.innerHTML = `
             <button class="feedback-toggle feedback-toggle-text" type="button" aria-label="Открыть форму обратной связи">Обратная связь</button>
             <div class="feedback-panel" hidden>
+                <button class="feedback-close" type="button" aria-label="Закрыть форму обратной связи">×</button>
                 <h3>Обратная связь</h3>
                 <p class="feedback-hint">Поделитесь идеей или проблемой — сообщение придёт в Telegram-бот.</p>
                 <form id="feedback-form" class="feedback-form">
@@ -49,18 +50,29 @@
         const panel = wrapper.querySelector('.feedback-panel');
         const form = wrapper.querySelector('#feedback-form');
         const status = wrapper.querySelector('.feedback-status');
+        const closeButton = wrapper.querySelector('.feedback-close');
         const feedbackEndpoint = resolveFeedbackEndpoint();
+
+        const openPanel = () => {
+            panel.removeAttribute('hidden');
+            toggle.classList.add('active');
+        };
+
+        const closePanel = () => {
+            panel.setAttribute('hidden', '');
+            toggle.classList.remove('active');
+        };
 
         toggle.addEventListener('click', () => {
             const isHidden = panel.hasAttribute('hidden');
             if (isHidden) {
-                panel.removeAttribute('hidden');
-                toggle.classList.add('active');
+                openPanel();
             } else {
-                panel.setAttribute('hidden', '');
-                toggle.classList.remove('active');
+                closePanel();
             }
         });
+
+        closeButton.addEventListener('click', closePanel);
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();

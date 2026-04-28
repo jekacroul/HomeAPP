@@ -916,6 +916,23 @@ body.home-page {
     box-shadow: 0 28px 60px rgba(15, 23, 42, 0.38);
 }
 
+.feedback-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 6px;
+}
+
+.feedback-close:hover {
+    color: #1f2937;
+}
+
 .feedback-form {
     display: grid;
     gap: 12px;
@@ -926,6 +943,8 @@ body.home-page {
     gap: 6px;
     font-size: 0.9rem;
     color: #334155;
+    text-align: left;
+    justify-items: stretch;
 }
 
 .feedback-form input,
