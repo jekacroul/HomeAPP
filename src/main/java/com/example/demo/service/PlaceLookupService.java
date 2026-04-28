@@ -2,6 +2,9 @@ package com.example.demo.service;
 
 import com.example.demo.model.Place;
 import com.example.demo.repository.PlaceRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -14,6 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,12 +25,19 @@ import java.util.regex.Pattern;
 public class PlaceLookupService {
 
     private static final Pattern GOOGLE_IMAGE_PATTERN = Pattern.compile("https?:\\\\/\\\\/[^\"\\\\]{20,}?\\.(?:jpg|jpeg|png|webp)(?:[^\"\\\\]*)", Pattern.CASE_INSENSITIVE);
+    private static final String DEFAULT_GEOCODER_API_KEY = "../application.properties/${yandex.maps.api-key}";
 
     private final PlaceRepository placeRepository;
     private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
+    private final String yandexApiKey;
 
-    public PlaceLookupService(PlaceRepository placeRepository) {
+    public PlaceLookupService(PlaceRepository placeRepository,
+                              ObjectMapper objectMapper,
+                              @Value("${yandex.maps.api-key:}") String yandexApiKey) {
         this.placeRepository = placeRepository;
+        this.objectMapper = objectMapper;
+        this.yandexApiKey = yandexApiKey == null ? "" : yandexApiKey.trim();
         this.httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .build();
@@ -36,6 +47,10 @@ public class PlaceLookupService {
         int safeLimit = Math.max(1, Math.min(limit, 100));
         Bounds bounds = parseBounds(bbox);
         String queryLower = query == null ? "" : query.toLowerCase(Locale.ROOT).trim();
+        List<GeoPlaceSuggestion> apiSuggestions = searchInYandexMaps(query, safeLimit, bounds);
+        if (!apiSuggestions.isEmpty()) {
+            return apiSuggestions;
+        }
 
         return placeRepository.findAll().stream()
             .filter(this::hasCoordinates)
@@ -47,6 +62,43 @@ public class PlaceLookupService {
             .limit(safeLimit)
             .map(ScoredSuggestion::suggestion)
             .toList();
+    }
+
+    private List<GeoPlaceSuggestion> searchInYandexMaps(String query, int limit, Bounds bounds) {
+        if (query == null || query.isBlank() || !isYandexApiKeyConfigured()) {
+            return List.of();
+        }
+
+        try {
+            URI searchUri = UriComponentsBuilder
+                .fromUriString("https://geocode-maps.yandex.ru/1.x/")
+                .queryParam("apikey", yandexApiKey)
+                .queryParam("format", "json")
+                .queryParam("lang", "ru_RU")
+                .queryParam("results", limit)
+                .queryParam("geocode", query.trim() + ", Минск")
+                .queryParamIfPresent("bbox", Optional.ofNullable(formatBounds(bounds)))
+                .queryParamIfPresent("rspn", Optional.of(bounds == null ? null : "1"))
+                .build(true)
+                .toUri();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(searchUri)
+                .timeout(Duration.ofSeconds(15))
+                .header("User-Agent", "Mozilla/5.0")
+                .header("Accept", "application/json")
+                .GET()
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                return List.of();
+            }
+
+            return extractGeoSuggestions(response.body(), limit, bounds);
+        } catch (Exception ignored) {
+            return List.of();
+        }
     }
 
     public Optional<String> lookupPlaceImage(String placeName, String address) {
@@ -145,6 +197,70 @@ public class PlaceLookupService {
         }
 
         return Optional.empty();
+    }
+
+    private List<GeoPlaceSuggestion> extractGeoSuggestions(String json, int limit, Bounds bounds) {
+        try {
+            JsonNode root = objectMapper.readTree(json);
+            JsonNode featureMembers = root.path("response")
+                .path("GeoObjectCollection")
+                .path("featureMember");
+            if (!featureMembers.isArray()) {
+                return List.of();
+            }
+
+            return StreamSupport.stream(featureMembers.spliterator(), false)
+                .map(this::mapFeatureToSuggestion)
+                .flatMap(Optional::stream)
+                .filter(suggestion -> bounds == null || bounds.contains(suggestion.latitude(), suggestion.longitude()))
+                .limit(limit)
+                .toList();
+        } catch (Exception ignored) {
+            return List.of();
+        }
+    }
+
+    private Optional<GeoPlaceSuggestion> mapFeatureToSuggestion(JsonNode featureMember) {
+        JsonNode geoObject = featureMember.path("GeoObject");
+        String pos = geoObject.path("Point").path("pos").asText("");
+        String[] coords = pos.trim().split("\\s+");
+        if (coords.length != 2) {
+            return Optional.empty();
+        }
+
+        try {
+            double longitude = Double.parseDouble(coords[0]);
+            double latitude = Double.parseDouble(coords[1]);
+
+            String name = geoObject.path("name").asText("").trim();
+            String description = geoObject.path("description").asText("").trim();
+            String formattedAddress = geoObject.path("metaDataProperty")
+                .path("GeocoderMetaData")
+                .path("Address")
+                .path("formatted")
+                .asText("")
+                .trim();
+
+            String resolvedName = name.isBlank() ? "Без названия" : name;
+            String resolvedAddress = !formattedAddress.isBlank() ? formattedAddress :
+                (!description.isBlank() ? description : "Без адреса");
+
+            return Optional.of(new GeoPlaceSuggestion(resolvedName, resolvedAddress, latitude, longitude));
+        } catch (NumberFormatException ex) {
+            return Optional.empty();
+        }
+    }
+
+    private String formatBounds(Bounds bounds) {
+        if (bounds == null) {
+            return null;
+        }
+
+        return bounds.west() + "," + bounds.south() + "~" + bounds.east() + "," + bounds.north();
+    }
+
+    private boolean isYandexApiKeyConfigured() {
+        return !yandexApiKey.isBlank() && !DEFAULT_GEOCODER_API_KEY.equals(yandexApiKey);
     }
 
     private Bounds parseBounds(String bbox) {
