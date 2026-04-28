@@ -302,7 +302,7 @@
             website: '',
             latitude: Number(place.latitude),
             longitude: Number(place.longitude)
-        })).filter((place) => Number.isFinite(place.latitude) && Number.isFinite(place.longitude));
+        })).filter((place) => Number.isFinite(place.latitude) && Number.isFinite(place.longitude)));
     }
 
     async function lookupPlaceImage(placeName, placeAddress, placeWebsite) {
