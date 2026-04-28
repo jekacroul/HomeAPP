@@ -29,14 +29,12 @@ public class PlaceLookupService {
 
     private final PlaceRepository placeRepository;
     private final HttpClient httpClient;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final String yandexApiKey;
 
     public PlaceLookupService(PlaceRepository placeRepository,
-                              ObjectMapper objectMapper,
                               @Value("${yandex.maps.api-key:}") String yandexApiKey) {
         this.placeRepository = placeRepository;
-        this.objectMapper = objectMapper;
         this.yandexApiKey = yandexApiKey == null ? "" : yandexApiKey.trim();
         this.httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
