@@ -153,6 +153,7 @@
 <script th:src="${mapApiUrl}" type="text/javascript"></script>
 <script th:inline="javascript">
     const minskCenter = [53.9023, 27.5615];
+    const minskBounds = [[53.75, 27.30], [54.02, 27.82]];
 
     let map;
     let marker;
@@ -276,45 +277,61 @@
         });
     }
 
+    function isInsideBounds(place, bounds) {
+        const latMin = Math.min(bounds[0][0], bounds[1][0]);
+        const latMax = Math.max(bounds[0][0], bounds[1][0]);
+        const lonMin = Math.min(bounds[0][1], bounds[1][1]);
+        const lonMax = Math.max(bounds[0][1], bounds[1][1]);
+
+        return place.latitude >= latMin
+            && place.latitude <= latMax
+            && place.longitude >= lonMin
+            && place.longitude <= lonMax;
+    }
+
+    function isRelevantPlace(place, query) {
+        const normalizedQuery = query.toLowerCase().trim();
+        if (!normalizedQuery) return true;
+        const haystack = (place.name + ' ' + place.address).toLowerCase();
+        const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
+        return tokens.every((token) => haystack.includes(token));
+    }
+
     async function lookupPlacesInYandex(query) {
         const searchText = query + ', Минск';
-        const bounds = map.getBounds();
-
-        let places = await geocodeToPlaces(searchText, {
-            kind: 'biz',
-            boundedBy: bounds,
-            strictBounds: false,
-            results: 20
-        });
-        if (places.length) {
-            return deduplicatePlaces(places);
-        }
-
-        places = await geocodeToPlaces(searchText, {
-            boundedBy: bounds,
-            strictBounds: false,
-            results: 20
-        });
-        if (places.length) {
-            return deduplicatePlaces(places);
-        }
+        const bounds = map.getBounds() || minskBounds;
+        const placesFromSuggest = [];
 
         if (typeof ymaps.suggest === 'function') {
-            const suggestions = await ymaps.suggest(searchText, {boundedBy: bounds, results: 10});
+            const suggestions = await ymaps.suggest(searchText, {
+                boundedBy: bounds,
+                provider: 'yandex#search',
+                results: 12
+            });
             const suggestionPlaces = await Promise.all(
                 suggestions.map(async (suggestion) => {
-                    const bySuggestion = await geocodeToPlaces(suggestion.value, {
-                        boundedBy: bounds,
-                        strictBounds: false,
+                    const bySuggestion = await geocodeToPlaces(suggestion.value + ', Минск', {
+                        kind: 'biz',
+                        boundedBy: minskBounds,
+                        strictBounds: true,
                         results: 1
                     });
                     return bySuggestion[0] || null;
                 })
             );
-            return deduplicatePlaces(suggestionPlaces.filter(Boolean));
+            placesFromSuggest.push(...suggestionPlaces.filter(Boolean));
         }
 
-        return [];
+        const placesFromGeocode = await geocodeToPlaces(searchText, {
+            kind: 'biz',
+            boundedBy: minskBounds,
+            strictBounds: true,
+            results: 20
+        });
+
+        return deduplicatePlaces([...placesFromSuggest, ...placesFromGeocode])
+            .filter((place) => isInsideBounds(place, minskBounds))
+            .filter((place) => isRelevantPlace(place, query));
     }
 
     async function lookupPlaceImage(placeName, placeAddress, placeWebsite) {
