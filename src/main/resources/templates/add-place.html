@@ -226,7 +226,36 @@
         });
     }
 
-    async function lookupPlaceImage(placeName, placeAddress) {
+    function extractPlaceInfo(geoObject) {
+        const props = geoObject.properties.getAll ? geoObject.properties.getAll() : {};
+        const meta = props.metaDataProperty || {};
+        const company = meta.CompanyMetaData || {};
+        const geocoderMeta = meta.GeocoderMetaData || {};
+        const addressMeta = geocoderMeta.Address || {};
+        const coordinates = geoObject.geometry.getCoordinates();
+
+        const name = (company.name || props.name || '').trim();
+        const address = (addressMeta.formatted || geocoderMeta.text || props.description || '').trim();
+        const website = (company.url || '').trim();
+
+        return {
+            name: name || 'Без названия',
+            address: address || 'Без адреса',
+            website,
+            latitude: coordinates[0],
+            longitude: coordinates[1]
+        };
+    }
+
+    function buildBalloonContent(place) {
+        const websiteHtml = place.website
+            ? '<br><a href="' + place.website + '" target="_blank" rel="noopener noreferrer">' + place.website + '</a>'
+            : '';
+
+        return place.name + '<br>' + place.address + websiteHtml;
+    }
+
+    async function lookupPlaceImage(placeName, placeAddress, placeWebsite) {
         if (!placeName) {
             return;
         }
@@ -235,7 +264,8 @@
 
         try {
             const apiUrl = /*[[@{/api/place-image}]]*/ '/api/place-image';
-            const response = await fetch(apiUrl + '?name=' + encodeURIComponent(placeName) + '&address=' + encodeURIComponent(placeAddress || ''));
+            const addressWithWebsite = [placeAddress, placeWebsite].filter(Boolean).join(' ');
+            const response = await fetch(apiUrl + '?name=' + encodeURIComponent(placeName) + '&address=' + encodeURIComponent(addressWithWebsite));
             if (!response.ok) {
                 throw new Error('image lookup failed');
             }
@@ -265,21 +295,17 @@
         resultsBox.innerHTML = '<div class="result-item muted">Ищем...</div>';
 
         try {
-            const bounds = map.getBounds();
-            const [first, second] = bounds;
-            const south = Math.min(first[0], second[0]);
-            const north = Math.max(first[0], second[0]);
-            const west = Math.min(first[1], second[1]);
-            const east = Math.max(first[1], second[1]);
+            const geocodeResult = await ymaps.geocode(query + ', Минск', {
+                kind: 'biz',
+                boundedBy: map.getBounds(),
+                strictBounds: true,
+                results: 20
+            });
 
-            const bbox = west + ',' + north + ',' + east + ',' + south;
-            const apiUrl = /*[[@{/api/minsk-places}]]*/ '/api/minsk-places';
-            const response = await fetch(apiUrl + '?query=' + encodeURIComponent(query) + '&bbox=' + encodeURIComponent(bbox));
-            if (!response.ok) {
-                throw new Error('API request failed');
-            }
-
-            const places = await response.json();
+            const places = [];
+            geocodeResult.geoObjects.each((geoObject) => {
+                places.push(extractPlaceInfo(geoObject));
+            });
             clearSearchMarkers();
 
             if (!places.length) {
@@ -294,11 +320,13 @@
                 const item = document.createElement('button');
                 item.type = 'button';
                 item.className = 'result-item';
-                item.textContent = place.name + ' — ' + place.address;
+                item.textContent = place.website
+                    ? place.name + ' — ' + place.address + ' (' + place.website + ')'
+                    : place.name + ' — ' + place.address;
 
                 const point = new ymaps.Placemark(
                     [place.latitude, place.longitude],
-                    {balloonContent: place.name + '<br>' + place.address},
+                    {balloonContent: buildBalloonContent(place)},
                     {preset: 'islands#blueDotIcon'}
                 );
                 map.geoObjects.add(point);
@@ -310,7 +338,7 @@
                     addressInput.value = place.address;
                     setMarker(place.latitude, place.longitude);
                     point.balloon.open();
-                    await lookupPlaceImage(place.name, place.address);
+                    await lookupPlaceImage(place.name, place.address, place.website);
                 });
 
                 resultsBox.appendChild(item);
@@ -322,7 +350,39 @@
                 map.setCenter(allCoordinates[0], 15, {duration: 200});
             }
         } catch (e) {
-            resultsBox.innerHTML = '<div class="result-item muted">Не удалось получить данные из API Яндекс.Карт.</div>';
+            resultsBox.innerHTML = '<div class="result-item muted">Не удалось получить данные из Яндекс.Карт. Попробуйте клик по карте на сам объект заведения.</div>';
+        }
+    }
+
+    async function pickBusinessByCoordinates(coords) {
+        try {
+            const geocodeResult = await ymaps.geocode(coords, {
+                kind: 'biz',
+                results: 1
+            });
+            const firstObject = geocodeResult.geoObjects.get(0);
+            if (!firstObject) {
+                setMarker(coords[0], coords[1]);
+                return;
+            }
+
+            const place = extractPlaceInfo(firstObject);
+            setMarker(place.latitude, place.longitude);
+            nameInput.value = place.name;
+            addressInput.value = place.address;
+
+            const point = new ymaps.Placemark(
+                [place.latitude, place.longitude],
+                {balloonContent: buildBalloonContent(place)},
+                {preset: 'islands#redDotIcon'}
+            );
+            map.geoObjects.add(point);
+            searchMarkers.push(point);
+            point.balloon.open();
+
+            await lookupPlaceImage(place.name, place.address, place.website);
+        } catch (e) {
+            setMarker(coords[0], coords[1]);
         }
     }
 
@@ -335,7 +395,7 @@
 
         map.events.add('click', (e) => {
             const coords = e.get('coords');
-            setMarker(coords[0], coords[1]);
+            pickBusinessByCoordinates(coords);
         });
 
         searchButton.addEventListener('click', searchPlaces);
