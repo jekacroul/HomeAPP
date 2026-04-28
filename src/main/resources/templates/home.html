@@ -4,23 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Где работать - Найди идеальное место</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="home-page" th:attr="data-feedback-endpoint=@{/feedback}">
-<nav class="navbar">
-    <div class="container nav-content home-nav-content">
-        <a th:href="@{/}" class="logo home-logo">📍 <span>Где работать</span></a>
-        <div class="nav-links home-nav-links">
-            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="btn btn-secondary">Админ-панель</a>
-            <a sec:authorize="isAuthenticated()" th:href="@{/add-place}" class="btn btn-primary">+ Добавить место</a>
+<body class="home-page bg-slate-950 text-slate-100 min-h-screen flex flex-col" th:attr="data-feedback-endpoint=@{/feedback}">
+<nav class="navbar bg-white/95 backdrop-blur sticky top-0 z-50 border-b border-slate-200">
+    <div class="container nav-content home-nav-content max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+        <a th:href="@{/}" class="logo home-logo text-indigo-600 font-bold text-xl">📍 <span>Где работать</span></a>
+        <div class="nav-links home-nav-links flex items-center gap-3">
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="btn btn-secondary inline-flex items-center justify-center rounded-lg bg-slate-100 px-4 py-2 font-medium text-slate-800 hover:bg-slate-200 transition">Админ-панель</a>
+            <a sec:authorize="isAuthenticated()" th:href="@{/add-place}" class="btn btn-primary inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-500 transition">+ Добавить место</a>
             <span sec:authorize="isAuthenticated()" class="user-info">
                     Привет, <span sec:authentication="principal.displayName"></span>
                 </span>
             <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="logout-form">
-                <button type="submit" class="btn btn-outline">Выйти</button>
+                <button type="submit" class="btn btn-outline inline-flex items-center justify-center rounded-lg border border-indigo-500 px-4 py-2 font-medium text-indigo-600 hover:bg-indigo-50 transition">Выйти</button>
             </form>
-            <a sec:authorize="!isAuthenticated()" th:href="@{/login}" class="btn btn-primary">Войти</a>
+            <a sec:authorize="!isAuthenticated()" th:href="@{/login}" class="btn btn-primary inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-500 transition">Войти</a>
         </div>
     </div>
 </nav>
@@ -100,7 +101,7 @@
                                 <span class="amenity" th:if="${place.noiseLevel.name() == 'NOISY'}">🔊 Шумно</span>
                                 <span class="amenity" th:if="${place.stayDurationAllowed}">⏰ Можно надолго</span>
                             </div>
-                            <a th:href="@{/place/{id}(id=${place.id})}" class="btn btn-secondary">Подробнее</a>
+                            <a th:href="@{/place/{id}(id=${place.id})}" class="btn btn-secondary inline-flex items-center justify-center rounded-lg bg-slate-100 px-4 py-2 font-medium text-slate-800 hover:bg-slate-200 transition">Подробнее</a>
                         </div>
                     </article>
                 </section>
@@ -115,8 +116,8 @@
     </section>
 </main>
 
-<footer class="footer home-footer">
-    <div class="container home-footer-content">
+<footer class="footer home-footer mt-auto border-t border-slate-800 bg-slate-950/90">
+    <div class="container home-footer-content max-w-7xl mx-auto px-4 py-6 text-slate-300 flex flex-col md:flex-row items-center justify-between gap-3">
         <p>© 2026 Где работать. Все права защищены.</p>
         <div class="home-footer-links">
             <a href="#">О проекте</a>

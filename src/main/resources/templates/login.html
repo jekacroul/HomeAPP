@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход - Где работать</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="auth-page">
+<body class="auth-page bg-slate-950 text-slate-100 min-h-screen flex flex-col">
     <div class="auth-container">
         <div class="auth-card">
-            <a th:href="@{/}" class="logo">📍 Где работать</a>
+            <a th:href="@{/}" class="logo text-indigo-600 font-bold text-xl">📍 Где работать</a>
             <h1>Вход</h1>
             
             <div th:if="${param.error}" class="alert alert-error">
@@ -34,7 +35,7 @@
                     <input type="password" id="password" name="password" required placeholder="••••••••">
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-large">Войти</button>
+                <button type="submit" class="btn btn-primary btn-large inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white hover:bg-indigo-500 transition">Войти</button>
             </form>
             
             <p class="auth-footer">
@@ -42,8 +43,8 @@
             </p>
         </div>
     </div>
-    <footer class="footer home-footer">
-        <div class="container home-footer-content">
+    <footer class="footer home-footer mt-auto border-t border-slate-800 bg-slate-950/90">
+        <div class="container home-footer-content max-w-7xl mx-auto px-4 py-6 text-slate-300 flex flex-col md:flex-row items-center justify-between gap-3">
             <p>© 2026 Где работать. Все права защищены.</p>
             <div class="home-footer-links">
                 <a href="#">О проекте</a>
